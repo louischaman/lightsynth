@@ -34,11 +34,13 @@ class LightInstrument():
             - changing based (note number, velocity, pattern)
     '''
 
-    def __init__(self, note_list, light_list, effect_note_list, rgb=(1, 0, 0), envelope_params=None, mode):
+    def __init__(self, note_list, light_list, effect_note_list, rgb=(1, 0, 0), envelope_params=None, mode="cycle"):
         self.note_list = note_list
         self.effect_note_list = effect_note_list
         self.light_list = light_list
-        set_rgb_colour(rgb)
+        self.set_rgb_colour(rgb)
+        self.mode = mode
+        self.light_envs = []
 
         if not envelope_params:
             envelope_params = {
@@ -51,23 +53,23 @@ class LightInstrument():
             }
         self.env = lf.MidiLightAction(action_data = envelope_params) 
         self.note_envelopes = dict()
-        for light in light_list:
+        for light in self.light_list:
             self.light_envs[light] = deepcopy(self.env)
         
         if mode == "cycle":
-            light_counter = 0
-            which_light = dict()
+            self.light_counter = 0
+            self.which_light = dict()
 
-    def add_notes(new_notes):
+    def add_notes(self, new_notes):
         self.note_list = self.note_list + new_notes
 
-    def adjust_light_params():
+    def adjust_light_params(self):
         pass
 
     def set_hsv_colour(self, hue, saturation):
         pass
 
-    def set_rgb_colour(rgb):
+    def set_rgb_colour(self, rgb):
         max_val = max(rgb)
         self.rgb = tuple([float(x)/max_val for x in rgb])
 
@@ -77,32 +79,34 @@ class LightInstrument():
     def set_ADSR(self, parameter, value):
         pass
 
-    def note_action(self, note)
+    def note_action(self, note):
         if note.type == "note_on":
-            note_off_action(note)
+            self.note_off_action(note)
         elif note.type == "note_off":
-            note_off_action(note)
+            self.note_off_action(note)
 
     def note_on_action(self, note):
-        if mode = "cycle":
-            light = light_list[light_counter]
+        if self.mode == "cycle":
+            light = self.light_list[self.light_counter]
             self.light_envs[light].on_note()
             # store note that turned the light on for turning off
-            which_light[note] = light 
-            light_counter = light_counter + 1
+            self.which_light[note] = light 
+            self.light_counter = self.light_counter + 1
 
 
     def note_off_action(self, note):
-        if mode = "cycle":
-            which_light[note] = light
+        if self.mode == "cycle":
+            light = self.which_light[note]
             self.light_envs[light].on_off()
         
 
     def get_light_output(self):
         output_list = []
-        for env in light_envs:
+        for env in self.light_envs:
             rgb_output = [colour * env for colour in self.rgb]
-            output_list.append
+            output_list.append(rgb_output)
+        
+        return(output_list)
 
 
 
