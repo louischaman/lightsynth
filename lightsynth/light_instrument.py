@@ -34,13 +34,12 @@ class LightInstrument():
             - changing based (note number, velocity, pattern)
     '''
 
-    def __init__(self, note_list, light_list, effect_note_list, rgb=(1, 0, 0), envelope_params=None, mode="cycle"):
+    def __init__(self, note_list, light_list, rgb=(1, 0, 0), envelope_params=None, mode="cycle"):
         self.note_list = note_list
-        self.effect_note_list = effect_note_list
         self.light_list = light_list
         self.set_rgb_colour(rgb)
         self.mode = mode
-        self.light_envs = []
+        self.light_envs = {}
 
         if not envelope_params:
             envelope_params = {
@@ -81,30 +80,44 @@ class LightInstrument():
 
     def note_action(self, note):
         if note.type == "note_on":
-            self.note_off_action(note)
+            self.note_on_action(note)
         elif note.type == "note_off":
             self.note_off_action(note)
 
     def note_on_action(self, note):
+
         if self.mode == "cycle":
             light = self.light_list[self.light_counter]
-            self.light_envs[light].on_note()
+            self.light_envs[light].note_on()
             # store note that turned the light on for turning off
-            self.which_light[note] = light 
+            note_str = note.channel + note.note
+            self.which_light[note_str] = light 
             self.light_counter = self.light_counter + 1
+            self.light_counter = self.light_counter % len(self.light_list)
+
+        if self.mode == "all":
+            for light, env in self.light_envs.iteritems():
+                env.note_on()
 
 
     def note_off_action(self, note):
-        if self.mode == "cycle":
-            light = self.which_light[note]
-            self.light_envs[light].on_off()
         
+        if self.mode == "cycle":
+            note_str = note.channel + note.note 
+            if note_str in self.which_light.keys():
+                light = self.which_light[note_str]
+                self.light_envs[light].note_off()
+        
+        if self.mode == "all":
+            for light, env in self.light_envs.iteritems():
+                env.note_off()
 
     def get_light_output(self):
-        output_list = []
-        for env in self.light_envs:
-            rgb_output = [colour * env for colour in self.rgb]
-            output_list.append(rgb_output)
+        output_list = {}
+        for light, env in self.light_envs.iteritems():
+            rgb_output = [colour * env.update() for colour in self.rgb]
+            output_list[light] = rgb_output
+
         
         return(output_list)
 
