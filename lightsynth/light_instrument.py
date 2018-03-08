@@ -97,7 +97,7 @@ class LightInstrument():
 
         if self.mode == "all":
             for light, env in self.light_envs.iteritems():
-                env.note_on()
+                self.light_envs[light].note_on()
 
 
     def note_off_action(self, note):
@@ -110,14 +110,13 @@ class LightInstrument():
         
         if self.mode == "all":
             for light, env in self.light_envs.iteritems():
-                env.note_off()
+                self.light_envs[light].note_off()
 
     def get_light_output(self):
         output_list = {}
         for light, env in self.light_envs.iteritems():
             rgb_output = [colour * env.update() for colour in self.rgb]
             output_list[light] = rgb_output
-
         
         return(output_list)
 
