@@ -4,8 +4,8 @@ import pysimpledmx as dmx
 
 
 def set_dmx(dmx_port, channel, level):
+    
     if type(dmx_port) is dict:
-        level = float(level)/255
         if channel in dmx_port.keys():
             #rescale to 0-1
             if dmx_port[channel] != level:
@@ -15,17 +15,17 @@ def set_dmx(dmx_port, channel, level):
             dmx_port[channel] = level
             show_dmx(dmx_port)
         return
-
-        
-    # doesnt go above 255 or below 0
-    level = min(level,255)
-    level = max(level,0)
-    try:
-        dmx_port.setChannel(channel, int(level) ) 
-        dmx_port.render()
-    except Exception as error:
-        print(channel, level)
-        raise(error)
+    else:
+        level = level*255
+        # doesnt go above 255 or below 0
+        level = min(level,255)
+        level = max(level,0)
+        try:
+            dmx_port.setChannel(channel, int(level) ) 
+            dmx_port.render()
+        except Exception as error:
+            print(channel, level)
+            raise(error)
 
 def show_dmx(dmx_port):
     if type(dmx_port) is dict:

@@ -34,17 +34,23 @@ class LightInstrument():
             - changing based (note number, velocity, pattern)
     '''
 
-    def __init__(self, note_list, light_list, rgb=(1, 0, 0), envelope_params=None, mode="cycle"):
+    def __init__(self, light_list, note_list = range(128), rgb=(1, 0, 0), envelope_params=None, mode="cycle", cc_controls = {}, note_channel = range(16)):
+        """
+        cc_controls are in the form {cc_index: param}
+
+        """
         self.note_list = note_list
         self.light_list = light_list
         self.set_rgb_colour(rgb)
         self.mode = mode
         self.light_envs = {}
+        self.cc_controls = cc_controls
+        self.note_channel = note_channel
 
         if not envelope_params:
             envelope_params = {
                 'type':'envelope', 
-                'level':255, 
+                'level':1, 
                 'attack':0, 
                 'decay':0.01, 
                 'sustain':0.9, 
@@ -59,6 +65,11 @@ class LightInstrument():
             self.light_counter = 0
             self.which_light = dict()
 
+        if mode == "single":
+            if len(note_list) != len(light_list):
+                raise(ValueError("note must have same number as lights"))
+            self.note_light = dict(zip(note_list, light_list))
+
     def add_notes(self, new_notes):
         self.note_list = self.note_list + new_notes
 
@@ -72,13 +83,41 @@ class LightInstrument():
         max_val = max(rgb)
         self.rgb = tuple([float(x)/max_val for x in rgb])
 
-    def set_brightness(self, level):
-        pass
-
     def set_ADSR(self, parameter, value):
         pass
 
+    def in_note_channel(self, midi_channel):
+        # checks whether midi_channel from note is accepted by instruments channesl
+        # works for instrument channel being a list or int
+        if type(self.note_channel) is int:
+            return(midi_channel == self.note_channel)
+        if type(self.note_channel) is list:
+            return(midi_channel in self.note_channel)
+
+    def midi_action(self, midi_action):
+        if midi_action.type == "note_on" or  midi_action.type == "note_off":
+            self.note_action(midi_action)
+
+        if midi_action.type == "control_change":
+            self.cc_action(midi_action)
+
+    def cc_action(self, cc_action):
+        value = float(cc_action.value)/127
+        if cc_action.channel in self.cc_controls.keys():
+            param =  self.cc_controls[cc_action.channel]
+            for light, env in self.light_envs.iteritems():
+                env.set_attribute_01(param, value)
+
     def note_action(self, note):
+
+        # is it the right channel
+        if not self.in_note_channel(note.channel):
+            return
+
+        # is it the right note
+        if not note.note in self.note_list:
+            return
+
         if note.type == "note_on":
             self.note_on_action(note)
         elif note.type == "note_off":
@@ -99,6 +138,10 @@ class LightInstrument():
             for light, env in self.light_envs.iteritems():
                 self.light_envs[light].note_on()
 
+        if self.mode == "single":
+            light = self.note_light[note.note]
+            self.light_envs[light].note_on()
+
 
     def note_off_action(self, note):
         
@@ -111,6 +154,10 @@ class LightInstrument():
         if self.mode == "all":
             for light, env in self.light_envs.iteritems():
                 self.light_envs[light].note_off()
+
+        if self.mode == "single":
+            light = self.note_light[note.note]
+            self.light_envs[light].note_off()
 
     def get_light_output(self):
         output_list = {}

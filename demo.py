@@ -37,7 +37,13 @@ envelope_params = {
     'release':0.2
 }
 
-instrument = inst.LightInstrument( note_list=range(126), light_list=light_dict.keys() )
+instrument = inst.LightInstrument( 
+    note_list=[36,37,38], 
+    light_list=light_dict.keys(), 
+    cc_controls = {1: "level"},
+    note_channel = 1, 
+    mode = "single" )
+
 instrument2 = inst.LightInstrument( note_list=range(126), light_list=light_dict.keys(), 
     mode="all", rgb=(1,1,1), envelope_params = envelope_params )
 
@@ -49,15 +55,7 @@ while 1:
             
         for msg in message_queue:
             print(msg)
-            if(msg.type == "control_change"):
-                pass
-
-            elif(msg.type == "note_on" or msg.type == "note_off"):
-                if msg.channel == 1:
-                    instrument.note_action(msg)
-                if msg.channel == 0:
-                    instrument2.note_action(msg)
-
+            instrument.midi_action(msg)
             
     light_vals = instrument.get_light_output()
     light_vals2 = instrument2.get_light_output()

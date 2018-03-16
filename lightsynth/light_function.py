@@ -84,7 +84,7 @@ class MidiLightAction:
         elif attribute in ['gate_length']:
             setattr(self, attribute, value)
         elif attribute in ['level']:
-            setattr(self, attribute, value*255)
+            setattr(self, attribute, value)
         else:
             raise(KeyError('attribute %s not recognised' % (attribute)))
 
