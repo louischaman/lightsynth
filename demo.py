@@ -3,7 +3,6 @@ import lightsynth.light_instrument as inst
 import pysimpledmx
 import utils.miditools as mt
 from utils.dmxtools import * 
-from utils.list_ports import serial_ports
 from collections import OrderedDict
 
 from pprint import pprint
@@ -13,7 +12,6 @@ light_dict = {0:20,1:30,2:40}
 
 #get dmx devices from user input
 dmx_port = user_dmx()
-
 
 #dmx_port = pysimpledmx.DMXConnection("COM11")
 

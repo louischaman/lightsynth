@@ -1,4 +1,7 @@
 from list_ports import serial_ports
+from pprint import pprint
+import pysimpledmx as dmx
+
 
 def set_dmx(dmx_port, channel, level):
     if type(dmx_port) is dict:
@@ -11,7 +14,7 @@ def set_dmx(dmx_port, channel, level):
         else:
             dmx_port[channel] = level
             show_dmx(dmx_port)
-    return
+        return
 
         
     # doesnt go above 255 or below 0
