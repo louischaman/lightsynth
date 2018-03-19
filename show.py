@@ -4,6 +4,7 @@ import pysimpledmx
 import utils.miditools as mt
 from utils.dmxtools import * 
 from collections import OrderedDict
+import copy
 
 from pprint import pprint
 
@@ -45,22 +46,30 @@ cc_controls = {
     4: "hue",
     5: "sustain",
     6: "level",
-    26: 'mode'}
+    
+    7: "attack",
+    8: "decay",
+    9: "sustain",
+    10: "release",
+    11: 'mode'}
 
 instrument = inst.LightInstrument( 
-    note_list=[60,62], 
+    note_list=[36,37], 
     light_list=lights.keys(), 
     cc_controls = cc_controls,
-    note_channel = 1,
+    #note_channel = 1,
     envelope_params = envelope_params,
     mode = "cycle" )
 
 instrument2 = inst.LightInstrument( 
+    note_list=[40,41], 
     light_list=lights.keys(), 
     mode="all", 
     rgb=(1,1,1), 
-    envelope_params = envelope_params,
-    note_channel = 0 )
+    envelope_params = copy.copy(envelope_params),
+    cc_controls = cc_controls
+    #note_channel = 0 
+    )
 
 instrument_rack = [instrument, instrument2]
 
@@ -72,8 +81,12 @@ while 1:
             
         for msg in message_queue:
             print(msg)
-            for inst in instrument_rack:
-                inst.midi_action(msg)
+            if msg.type == "control_change":
+                instrument_rack[msg.channel].midi_action(msg)
+            else:
+                for inst in instrument_rack:
+                    inst.midi_action(msg)
+
             
     light_vals = instrument_rack[0].get_light_output()
     light_vals2 = instrument_rack[1].get_light_output()

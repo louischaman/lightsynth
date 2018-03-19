@@ -1,5 +1,6 @@
 import light_function as lf
 from copy import deepcopy
+import colorsys
 
 class LightInstrument():
     '''
@@ -34,7 +35,15 @@ class LightInstrument():
             - changing based (note number, velocity, pattern)
     '''
 
-    def __init__(self, light_list, note_list = range(128), rgb=(1, 0, 0), envelope_params=None, mode="cycle", cc_controls = {}, note_channel = range(16)):
+    def __init__(
+        self, light_list, 
+        note_list = range(128), 
+        rgb=(1, 0, 0), 
+        envelope_params=None, 
+        mode="cycle", 
+        cc_controls = {}, 
+        note_channel = range(16)
+    ):
         """
         cc_controls are in the form {cc_index: param}
 
@@ -42,7 +51,7 @@ class LightInstrument():
         self.note_list = note_list
         self.light_list = light_list
         self.set_rgb_colour(rgb)
-        self.mode = mode
+        self.set_mode(mode)
         self.light_envs = {}
         self.cc_controls = cc_controls
         self.note_channel = note_channel
@@ -56,19 +65,27 @@ class LightInstrument():
                 'sustain':0.9, 
                 'release':0.1
             }
+
         self.env = lf.MidiLightAction(action_data = envelope_params) 
         self.note_envelopes = dict()
         for light in self.light_list:
             self.light_envs[light] = deepcopy(self.env)
+        
+     
+    def set_mode(self, mode):
+        self.mode = mode
+        self.modes = ['all', 'single', 'cycle']
+        self.mode_int = self.modes.index(self.mode)
         
         if mode == "cycle":
             self.light_counter = 0
             self.which_light = dict()
 
         if mode == "single":
-            if len(note_list) != len(light_list):
-                raise(ValueError("note must have same number as lights"))
-            self.note_light = dict(zip(note_list, light_list))
+            if len(self.note_list) != len(self.light_list):
+                raise(ValueError("note must have same number as lights", self.note_list, self.light_list ))
+            self.note_light = dict(zip(self.note_list, self.light_list))
+        
 
     def add_notes(self, new_notes):
         self.note_list = self.note_list + new_notes
@@ -77,11 +94,22 @@ class LightInstrument():
         pass
 
     def set_hsv_colour(self, hue, saturation):
-        pass
+        self.rgb = colorsys.hsv_to_rgb(hue, saturation, 1)
+
+    def set_hue(self, hue):
+        rgb = colorsys.hsv_to_rgb(hue, self.saturation, 1)
+        self.set_rgb_colour(rgb)
+    
+    def set_saturation(self, saturation):
+        rgb = colorsys.hsv_to_rgb(self.hue, saturation, 1)
+        self.set_rgb_colour(rgb)
 
     def set_rgb_colour(self, rgb):
         max_val = max(rgb)
         self.rgb = tuple([float(x)/max_val for x in rgb])
+        hsv = colorsys.rgb_to_hsv(*rgb)
+        self.hue = hsv[0]
+        self.saturation = hsv[1]
 
     def set_ADSR(self, parameter, value):
         pass
@@ -95,6 +123,12 @@ class LightInstrument():
             return(midi_channel in self.note_channel)
 
     def midi_action(self, midi_action):
+
+        
+        # is it the right channel
+        if not self.in_note_channel(midi_action.channel):
+            return
+
         if midi_action.type == "note_on" or  midi_action.type == "note_off":
             self.note_action(midi_action)
 
@@ -103,16 +137,38 @@ class LightInstrument():
 
     def cc_action(self, cc_action):
         value = float(cc_action.value)/127
-        if cc_action.channel in self.cc_controls.keys():
-            param =  self.cc_controls[cc_action.channel]
-            for light, env in self.light_envs.iteritems():
-                env.set_attribute_01(param, value)
+        if cc_action.control in self.cc_controls.keys():
+            param =  self.cc_controls[cc_action.control]
+            
+            if param in lf.param_list + ["level"]:
+                print(param, value)
+                for light, env in self.light_envs.iteritems():
+                    env.set_attribute_01(param, value)
+            
+            if param == 'hue':
+                print(param, value)
+                self.set_hue(value)
+            
+            if param == 'saturation':
+                print(param, value)
+                self.set_saturation(value)
+
+            if param == 'mode':
+                
+                print(param, value)
+                # mode selector is using encoder which is either 0 or 127
+                
+                if value == 1:
+                    self.mode_int = self.mode_int -1 
+                else:
+                    self.mode_int = self.mode_int +1 
+                self.mode_int = self.mode_int % len(self.modes)
+                    
+                mode = self.modes[self.mode_int]
+                self.set_mode(mode)
+                print(self.mode)
 
     def note_action(self, note):
-
-        # is it the right channel
-        if not self.in_note_channel(note.channel):
-            return
 
         # is it the right note
         if not note.note in self.note_list:

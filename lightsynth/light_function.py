@@ -2,6 +2,7 @@ import math
 import time
 from adsr import ADSRenvelope as env
 action_type_lookup = {"switching":"s", "gate":"g", "envelope":"e"}
+param_list = ['attack', 'decay', 'sustain', 'release', 'lfo_level', 'lfo_rate']
 
 class MidiLightAction:
     '''
@@ -19,7 +20,7 @@ class MidiLightAction:
     '''
 
     def __init__(self, action_data):
-        
+
         self.action_data = action_data
         self.action_type = action_data['type']
 
@@ -36,10 +37,18 @@ class MidiLightAction:
         elif self.action_type == "envelope":
             self.level = action_data['level']
             self.start_time = time.time()
-            self.env = env(action_data['attack'], 
+            if 'lfo_level' in action_data.keys() and 'lfo_rate' in action_data.keys() :
+                self.env = env(action_data['attack'], 
                            action_data['decay'], 
                            action_data['sustain'], 
-                           action_data['release'])
+                           action_data['release'], 
+                           lfo_level=action_data['lfo_level'], 
+                           lfo_rate=action_data['lfo_rate'])
+            else:
+                self.env = env(action_data['attack'], 
+                            action_data['decay'], 
+                            action_data['sustain'], 
+                            action_data['release'])
 
         else:
             raise(ValueError("type not recognised"))
@@ -53,10 +62,14 @@ class MidiLightAction:
             return None
 
     def set_attribute(self, attribute, value):
-        if attribute in ['attack', 'decay', 'sustain', 'release']:
+        if attribute in param_list:
             setattr(self.env, attribute, value)
         else:
             setattr(self, attribute, value)
+
+    def exp_scaling(self, max_val, exp_rate, value_0_1):
+        # scales from 0 to max_val exponentially so more control in low end
+        return max_val * ( math.pow(exp_rate, value_0_1) - 1 ) /(exp_rate - 1)
 
 
     def set_attribute_01(self, attribute, value):
@@ -70,6 +83,12 @@ class MidiLightAction:
             exp_rate = 5
             val_exp = max_val * ( math.pow(exp_rate, value) - 1 ) /(exp_rate - 1)
             setattr(self.env, attribute, val_exp)
+            
+        elif attribute in ['lfo_level']:
+            setattr(self.env, attribute, value)
+        elif attribute in ['lfo_rate']:
+            value = self.exp_scaling(5, 10, value)
+            self.env.set_lfo_rate(value)
         elif attribute in ['decay-release']:
             setattr(self.env, 'decay', value)
             setattr(self.env, 'release', value)
@@ -84,6 +103,8 @@ class MidiLightAction:
         elif attribute in ['gate_length']:
             setattr(self, attribute, value)
         elif attribute in ['level']:
+            value = self.exp_scaling(1, 10, value)
+            print(value)
             setattr(self, attribute, value)
         else:
             raise(KeyError('attribute %s not recognised' % (attribute)))
