@@ -50,7 +50,7 @@ class LightInstrument():
         """
         self.note_list = note_list
         self.light_list = light_list
-        self.set_rgb_colour(rgb)
+        self.set_hsv_colour_rgb(rgb)
         self.set_mode(mode)
         self.light_envs = {}
         self.cc_controls = cc_controls
@@ -93,23 +93,24 @@ class LightInstrument():
     def adjust_light_params(self):
         pass
 
-    def set_hsv_colour(self, hue, saturation):
-        self.rgb = colorsys.hsv_to_rgb(hue, saturation, 1)
+    def get_rgb_colour(self):
+        rgb = colorsys.hsv_to_rgb(self.hue, self.saturation, self.value)
+        return rgb
 
     def set_hue(self, hue):
-        rgb = colorsys.hsv_to_rgb(hue, self.saturation, 1)
-        self.set_rgb_colour(rgb)
+        self.hue = hue
     
     def set_saturation(self, saturation):
-        rgb = colorsys.hsv_to_rgb(self.hue, saturation, 1)
-        self.set_rgb_colour(rgb)
+        self.saturation = saturation
 
-    def set_rgb_colour(self, rgb):
-        max_val = max(rgb)
-        self.rgb = tuple([float(x)/max_val for x in rgb])
+    def set_value(self, value):
+        self.value = value
+
+    def set_hsv_colour_rgb(self, rgb):
         hsv = colorsys.rgb_to_hsv(*rgb)
         self.hue = hsv[0]
         self.saturation = hsv[1]
+        self.value = hsv[2]
 
     def set_ADSR(self, parameter, value):
         pass
@@ -139,8 +140,11 @@ class LightInstrument():
         value = float(cc_action.value)/127
         if cc_action.control in self.cc_controls.keys():
             param =  self.cc_controls[cc_action.control]
+
+            if param == "level":
+                self.set_value(value)
             
-            if param in lf.param_list + ["level"]:
+            if param in lf.param_list:
                 print(param, value)
                 for light, env in self.light_envs.iteritems():
                     env.set_attribute_01(param, value)
@@ -217,8 +221,9 @@ class LightInstrument():
 
     def get_light_output(self):
         output_list = {}
+        rgb = self.get_rgb_colour()
         for light, env in self.light_envs.iteritems():
-            rgb_output = [colour * env.update() for colour in self.rgb]
+            rgb_output = [colour * env.update() for colour in rgb]
             output_list[light] = rgb_output
         
         return(output_list)
