@@ -9,6 +9,8 @@ class ADSRenvelope(object):
         Sustain
         Release 
     based on time since note on event
+
+    max attack is always 1
     '''
     def __init__(self, attack, decay, sustain, release, lfo_level=0, lfo_rate=1,  mode="linear"):
         self.attack = attack
@@ -67,22 +69,27 @@ class ADSRenvelope(object):
             else:
                 return "off"
     
+
+    def exp_scaling(self, exp_rate, value_0_1):
+        # scales from 0 to 1 exponentially so more control in low end
+        return ( math.pow(exp_rate, value_0_1) - 1 ) /(exp_rate - 1)
+
     def get_attack_level(self, time_since_event):
-        if self.mode == "linear":
-            return (1.0 /self.attack * time_since_event)
+        return (1.0 /self.attack * time_since_event)
 
     
     def get_decay_level(self, time_since_event):
-        if self.mode == "linear":
-            decay_time = time_since_event  - self.attack
-            m = float(self.sustain - 1) / self.decay
-            c = 1
-            return m * decay_time + c
+        decay_time = time_since_event  - self.attack
+        m = float(self.sustain - 1) / self.decay
+        c = 1
+        return m * decay_time + c
     
     def get_release_level(self, time_since_event):
         if self.mode == "linear":
             return (1 - 1.0 / self.release * time_since_event) * self.off_level
-    
+        if self.mode == "exponential":
+            return self.exp_scaling( 2, (1 - 1.0 / self.release * time_since_event) * self.off_level)
+
     def get_level_adsr(self):
         '''
         gets the level of the envelope at any time

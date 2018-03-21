@@ -19,7 +19,7 @@ dmx_port = user_dmx()
 
 lights = {    
     0:{'root_dmx': 20, 'func': set_big_light},
-    1:{'root_dmx': 30, 'func': set_light_cheap}
+    1:{'root_dmx': 30, 'func': set_big_light} #set_light_cheap
 }
 
 
@@ -31,13 +31,14 @@ port_dict = mt.user_midi()
 
 envelope_params = {
     'type':'envelope', 
-    'level':1, 
+    'level':0, 
     'attack':2, 
     'decay':2, 
     'sustain':1, 
     'release':2,
     'lfo_level':0,
-    'lfo_rate':1
+    'lfo_rate':1,
+    'env_mode':"exponential"
 }
 cc_controls = {
     1: "lfo_rate",
@@ -82,7 +83,8 @@ while 1:
         for msg in message_queue:
             print(msg)
             if msg.type == "control_change":
-                instrument_rack[msg.channel].midi_action(msg)
+                if msg.channel in range(0,len(instrument_rack)):
+                    instrument_rack[msg.channel].midi_action(msg)
             else:
                 for inst in instrument_rack:
                     inst.midi_action(msg)
@@ -92,4 +94,8 @@ while 1:
     light_vals2 = instrument_rack[1].get_light_output()
     for light_key, light in lights.iteritems():
         val = [ light_vals2[light_key][i] + light_vals[light_key][i] for i in range(3)] 
+        max_val = max(val)
+        max_val = max(1, max_val)
+        
+        val = [col/max_val for col in val]
         light['func'](dmx_port, light['root_dmx'], val)

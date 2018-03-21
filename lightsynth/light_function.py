@@ -43,7 +43,8 @@ class MidiLightAction:
                            action_data['sustain'], 
                            action_data['release'], 
                            lfo_level=action_data['lfo_level'], 
-                           lfo_rate=action_data['lfo_rate'])
+                           lfo_rate=action_data['lfo_rate'],
+                           mode=action_data['env_mode'])
             else:
                 self.env = env(action_data['attack'], 
                             action_data['decay'], 
