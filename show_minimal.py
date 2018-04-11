@@ -5,6 +5,8 @@ import utils.miditools as mt
 from utils.dmxtools import * 
 from collections import OrderedDict
 import copy
+import numpy as np
+import time
 
 from pprint import pprint
 
@@ -28,6 +30,8 @@ lights = {
 }
 
 
+
+
 print("on")
 
 # get midi devices from user input
@@ -37,10 +41,10 @@ port_dict = mt.user_midi()
 envelope_params = {
     'type':'envelope', 
     'level':1, 
-    'attack':2, 
-    'decay':2, 
+    'attack':0, 
+    'decay':0.5, 
     'sustain':1, 
-    'release':2,
+    'release':0.04,
     'lfo_level':0,
     'lfo_rate':1,
     'env_mode':"exponential"
@@ -60,15 +64,15 @@ cc_controls = {
     11: 'mode'}
 
 instrument = inst.LightInstrument( 
-    note_list=[36,37,38,39,44,45,46], 
+    note_list=[60,61],#38,39,44,45,46], 
     light_list=lights.keys(), 
     cc_controls = cc_controls,
     #note_channel = 1,
     envelope_params = envelope_params,
-    mode = "cycle" )
+    mode = "all" )
 
 instrument2 = inst.LightInstrument( 
-    note_list=[40,41,42,43,47,48,49], 
+    note_list=[40,41],#,42,43,47,48,49], 
     light_list=lights.keys(), 
     mode="all", 
     rgb=(1,1,1), 
@@ -79,7 +83,11 @@ instrument2 = inst.LightInstrument(
 
 instrument_rack = [instrument, instrument2]
 
+whole_secs = int(time.time())
+n_frames = 0
 while 1:
+    n_frames = n_frames + 1
+
     for device, midi_port in port_dict.iteritems():
 
         # if two cc messages with the same control and channel have come then only append most recent
@@ -97,11 +105,18 @@ while 1:
             
     light_vals = instrument_rack[0].get_light_output()
     light_vals2 = instrument_rack[1].get_light_output()
+    light_vals = np.add( np.array(light_vals.values()), np.array(light_vals2.values()))
+    maxes = np.maximum( np.max(light_vals,1), 1)
+    light_vals_scaled = light_vals/maxes[:,np.newaxis]
 
     for light_key, light in lights.iteritems():
-        val = [ light_vals2[light_key][i] + light_vals[light_key][i] for i in range(3)] 
-        max_val = max(val)
-        max_val = max(1, max_val)
-        
-        val = [col/max_val for col in val]
+        val = light_vals_scaled[light_key,].tolist()
         light['func'](dmx_port, light['root_dmx'], val)
+    dmx_port.render()
+
+    if time.time()>whole_secs + 1:
+        whole_secs = time.time()
+        print(n_frames)
+        n_frames = 0
+
+    

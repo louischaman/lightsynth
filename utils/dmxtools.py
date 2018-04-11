@@ -1,6 +1,18 @@
 from list_ports import serial_ports
 from pprint import pprint
 import pysimpledmx as dmx
+import numpy as np
+
+
+# class light_rack:
+#     def __init__(self, lights):
+#         self.lights = lights
+    
+
+
+#     def show_lights(self, pattern, dmx_port):
+#         np.matrix(pattern)
+
 
 
 def set_dmx(dmx_port, channel, level):
@@ -22,7 +34,7 @@ def set_dmx(dmx_port, channel, level):
         level = max(level,0)
         try:
             dmx_port.setChannel(channel, int(level) ) 
-            dmx_port.render()
+        #   dmx_port.render()
         except Exception as error:
             print(channel, level)
             raise(error)
@@ -38,6 +50,11 @@ def set_light_cheap(dmx_port, light_channel, rgb):
     for i, col_lev in enumerate(rgb):
         set_dmx(dmx_port, light_channel + i + 1, col_lev )
         
+
+def set_light_bulb(dmx_port, light_channel, rgb):
+    # set red to lightbulb
+    set_dmx(dmx_port, light_channel + 1, rgb[0] )
+
 def set_big_light(dmx_port, light_channel, rgb):
     # set position one (level) to max
 

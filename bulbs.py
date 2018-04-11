@@ -18,13 +18,8 @@ dmx_port = user_dmx()
 
 set_light_cheap(dmx_port, 20, (1,0,0))
 lights = {    
-    0:{'root_dmx': 10, 'func': set_light_cheap},
-    1:{'root_dmx': 20, 'func': set_light_cheap},
-    2:{'root_dmx': 30, 'func': set_light_cheap},
-    3:{'root_dmx': 40, 'func': set_light_cheap},
-    4:{'root_dmx': 50, 'func': set_light_cheap},
-    5:{'root_dmx': 70, 'func': set_big_light},
-    6:{'root_dmx': 80, 'func': set_big_light} #set_light_cheap
+    0:{'root_dmx': 0, 'func': set_light_bulb},
+    1:{'root_dmx': 1, 'func': set_light_bulb}
 }
 
 
@@ -60,21 +55,21 @@ cc_controls = {
     11: 'mode'}
 
 instrument = inst.LightInstrument( 
-    note_list=[36,37,38,39,44,45,46], 
+    #note_list=[48,37],#,38,39,44,45,46], 
     light_list=lights.keys(), 
     cc_controls = cc_controls,
-    #note_channel = 1,
+    note_channel = 0,
     envelope_params = envelope_params,
     mode = "cycle" )
 
 instrument2 = inst.LightInstrument( 
-    note_list=[40,41,42,43,47,48,49], 
+    note_list=[40,60],#41,42,43,47,48,49], 
     light_list=lights.keys(), 
-    mode="all", 
+    mode="single", 
     rgb=(1,1,1), 
     envelope_params = copy.copy(envelope_params),
-    cc_controls = cc_controls
-    #note_channel = 0 
+    cc_controls = cc_controls,
+    note_channel = 1
     )
 
 instrument_rack = [instrument, instrument2]

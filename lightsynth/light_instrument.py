@@ -2,6 +2,63 @@ import light_function as lf
 from copy import deepcopy
 import colorsys
 
+class LightEffects():
+    '''
+    Class for strobes and other effect lighting
+    non-rgb
+
+    '''
+
+    def __init__(self, switch_notes=[60], cc_controls={}, light_type="strobe", note_channel = range(16)):
+        self.switch_notes = switch_notes
+        self.cc_controls = cc_controls
+        self.type = light_type
+        self.light_on = False
+        self.note_channel = note_channel
+
+        self.rate = 0.5
+        self.brightness = 0.5
+    
+    def in_note_channel(self, midi_channel):
+        # checks whether midi_channel from note is accepted by instruments channesl
+        # works for instrument channel being a list or int
+        if type(self.note_channel) is int:
+            return(midi_channel == self.note_channel)
+        if type(self.note_channel) is list:
+            return(midi_channel in self.note_channel)
+    
+    def midi_action(self, midi_action):
+
+        # is it the right channel
+        if not self.in_note_channel(midi_action.channel):
+            return
+
+        if midi_action.type == "note_on" or  midi_action.type == "note_off":
+            if midi_action.note in self.switch_notes:
+                self.note_action(midi_action)
+
+        elif midi_action.type == "control_change":
+            self.cc_action(midi_action)
+
+    def cc_action(self, cc_action):
+        value = float(cc_action.value)/127
+        if cc_action.control in self.cc_controls.keys():
+            param =  self.cc_controls[cc_action.control]
+
+            if param == "rate":
+                self.rate = value
+            
+            if param == "brightness":
+                self.brightness = value
+            
+
+
+    def note_action(self, note):
+        if note.type == "note_on":
+            self.light_on = not self.light_on
+
+
+
 class LightInstrument():
     '''
     setup with
@@ -125,9 +182,9 @@ class LightInstrument():
 
     def midi_action(self, midi_action):
 
-        
         # is it the right channel
         if not self.in_note_channel(midi_action.channel):
+            
             return
 
         if midi_action.type == "note_on" or  midi_action.type == "note_off":
