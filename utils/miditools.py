@@ -2,6 +2,36 @@ import mido
 from pprint import pprint
 from collections import OrderedDict
 
+
+def same_message(note_a, note_b):
+    is_same = (note_a.control == note_b.control) and (note_a.channel == note_b.channel) and (note_a.type == note_b.type) and (note_a.value == note_b.value)
+    return(is_same)
+
+
+def same_channel_control(note_a, note_b):
+    is_same = (note_a.control == note_b.control) and (note_a.channel == note_b.channel) and (note_a.type == note_b.type) 
+    return(is_same)
+
+def toggle_cc(status, msg):
+    for cc, value in status.iteritems():
+        if same_message(cc, msg):
+            value = (not value) * 127
+            msg.value = value
+            break
+    return(msg)
+
+def change_cc(mapping, msg):
+    if msg.type == "control_change":
+        for cc_from, cc_to in mapping.iteritems():
+            if same_channel_control(cc_from, msg):
+
+                msg.channel = cc_to.channel
+                msg.control = cc_to.control
+                break
+    return(msg)
+
+
+
 def user_midi():
     midi_devices = mido.get_input_names()
     port_dict = {}

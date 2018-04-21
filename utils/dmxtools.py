@@ -49,7 +49,14 @@ def set_light_cheap(dmx_port, light_channel, rgb):
 
     for i, col_lev in enumerate(rgb):
         set_dmx(dmx_port, light_channel + i + 1, col_lev )
-        
+
+
+def set_effect(dmx_port, light_channel, values):
+    # set position one (level) to max
+
+    for i, col_lev in enumerate(values):
+        set_dmx(dmx_port, light_channel + i, col_lev )
+         
 
 def set_light_bulb(dmx_port, light_channel, rgb):
     # set red to lightbulb
