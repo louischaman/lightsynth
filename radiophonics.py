@@ -75,13 +75,32 @@ instrument = inst.LightInstrument(
     envelope_params = envelope_params,
     mode = "single" )
 
+cc_controls_2 = dict()
+for key, value in cc_controls.iteritems():
+    cc_controls_2[key+1] = value
+
 instrument2 = inst.LightInstrument( 
-    note_list=[40,41,42,43,47,48,49], 
+    note_list=[43], 
     light_list=lights.keys(), 
     mode="all", 
     rgb=(1,1,1), 
     envelope_params = copy.copy(envelope_params),
-    cc_controls = cc_controls,
+    cc_controls = cc_controls_2,
+    note_channel = 0 
+    )
+
+
+cc_controls_3 = dict()
+for key, value in cc_controls_2.iteritems():
+    cc_controls_3[key+1] = value
+
+instrument3 = inst.LightInstrument( 
+    note_list=[43], 
+    light_list=lights.keys(), 
+    mode="all", 
+    rgb=(1,1,1), 
+    envelope_params = copy.copy(envelope_params),
+    cc_controls = cc_controls_3,
     note_channel = 0 
     )
 
