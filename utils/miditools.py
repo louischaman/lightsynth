@@ -30,6 +30,13 @@ def change_cc(mapping, msg):
                 break
     return(msg)
 
+def map_note(mapping, msg):
+    if msg.type == "note_on" or msg.type == "note_off":
+        try:
+            msg.note = mapping[msg.note]
+        except:
+            pass
+    return(msg)
 
 
 def user_midi():
@@ -72,7 +79,7 @@ def user_midi_output():
 
 
 
-def iter_pending_clean(midi_port):
+def iter_pending_clean(midi_port, clean_velocity = True):
         # if two cc messages with the same control and channel have come then only append most recent
     message_queue = OrderedDict({})
     msg_no = 0
@@ -83,6 +90,9 @@ def iter_pending_clean(midi_port):
 
         
         if(msg.type == "note_on" or msg.type == "note_off"):
+            if clean_velocity and msg.velocity == 0:
+                msg = mido.Message('note_off', channel = msg.channel, note = msg.note)
+
             message_queue[msg_no] = msg
 
         

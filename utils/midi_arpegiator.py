@@ -1,12 +1,14 @@
 import mido
 import time
+import random
+
 '''
 goes through the notes pressed down and plays them in sequence
 
 '''
 
 class arpeggiator():
-    def __init__(self, rate = 240, direction_up = 1):
+    def __init__(self, rate = 240, order = range(25), randomise = True):
         '''
         set up 
             whether up or down 
@@ -17,13 +19,31 @@ class arpeggiator():
         self.next_note_time = 0
         self.rate = rate# in bpm
         self.note_i = 0
-        self.up = direction_up
+        self.order = order
         self.note_playing = False
+        self.randomise = randomise
 
+    def randomise_order(self):
+        random.shuffle(self.order)
 
     def notes_on_list(self):
         # returns list of notes that are pressed
         return [i for i, note_on in enumerate(self.notes_on) if note_on]
+
+    
+    def notes_on_list_order(self):
+        # returns list of notes that are pressed
+        nt_on = self.notes_on_list()
+        ord_cuttoff = self.order[:len(nt_on)]
+        print(ord_cuttoff)
+        ord_less = sorted(range(len(ord_cuttoff)),key=ord_cuttoff.__getitem__)
+        print(ord_less)
+        for ind, pos in enumerate(ord_less):
+            ord_cuttoff[pos] = ind
+        print(ord_cuttoff)
+        return [ nt_on[i] for i in ord_cuttoff  ]
+
+
 
     def note_msg(self, msg):
         # change notes_on either note on or off
@@ -42,8 +62,8 @@ class arpeggiator():
             self.notes_on[msg.note] = False
 
     def shift_next_note(self):
-            nt_list = self.notes_on_list()
-            note_i = (nt_list.index(self.next_note_play) + self.up) % len(nt_list)
+            nt_list = self.notes_on_list_order()
+            note_i = (nt_list.index(self.next_note_play) + 1) % len(nt_list)
             self.next_note_play = nt_list[note_i]
 
 
@@ -59,6 +79,8 @@ class arpeggiator():
 
             
                 if  not self.note_playing:
+                    if self.randomise:
+                        self.randomise_order()
                     # if its first note then not note playing
                     self.note_playing = notes_out[0]
                     return [mido.Message('note_on', note = notes_out[0])]
