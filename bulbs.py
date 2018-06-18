@@ -46,12 +46,12 @@ cc_controls = {
     3: "saturation",
     4: "hue",
     6: "level",
+    7: "mode",
     
     103: "attack",
     104: "decay",
     107: "sustain",
-    108: "release",
-    106: 'mode'}
+    108: "release"}
 
 instrument = inst.LightInstrument( 
     #note_list=[48,37],#,38,39,44,45,46], 
@@ -60,6 +60,9 @@ instrument = inst.LightInstrument(
     cc_controls = cc_controls,
     envelope_params = envelope_params,
     mode = "single" )
+
+
+modes_ind = 1
 
 instrument_rack = [instrument]
 
@@ -76,8 +79,13 @@ while 1:
                 if msg.type in ["note_on", "note_off"]:
                     msg.note = msg.note % len(lights)
                 inst.midi_action(msg)
-
             
+            if msg.type == "control_change":
+                if msg.control == 118 and msg.value == 127:
+                    modes_ind = (modes_ind + 1 ) % 3
+                    print("change mode to " + instrument_rack[0].modes[modes_ind])
+                    instrument_rack[0].set_mode( instrument_rack[0].modes[modes_ind])
+
     light_vals = instrument_rack[0].get_light_output()
     
     for light_key, light in lights.iteritems():
@@ -86,4 +94,4 @@ while 1:
         #val = [col/max_val for col in val]
         light['func'](dmx_port, light['root_dmx'], val)
     
-    dmx_port.render()
+    #dmx_port.render()

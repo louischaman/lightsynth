@@ -20,7 +20,7 @@ note_store_auto = mt.note_store()
 rand_note_time = 1
 arp_on = True
 
-time_before_random = 5
+time_before_random = 10
 
 mapping = scalemap.generate_scale_mapping(scalemap.scales['roro'])
 
@@ -82,6 +82,11 @@ while 1:
                     if msg.control == 113 and msg.value == 127:
                         arp_on = not arp_on
                     send_msg(midi_out_port, msg)
+
+                
+                if msg.type == "pitchwheel":
+                    send_msg(midi_out_port, msg)
+
 
                 if arp_on:
                     arp.note_msg(msg)
