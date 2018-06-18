@@ -22,6 +22,7 @@ class arpeggiator():
         self.order = order
         self.note_playing = False
         self.randomise = randomise
+        self.next_note_play = 0
 
     def randomise_order(self):
         random.shuffle(self.order)
@@ -29,21 +30,19 @@ class arpeggiator():
     def notes_on_list(self):
         # returns list of notes that are pressed
         return [i for i, note_on in enumerate(self.notes_on) if note_on]
-
     
     def notes_on_list_order(self):
         # returns list of notes that are pressed
         nt_on = self.notes_on_list()
+
+        if len(self.order) < len(nt_on):
+            raise(ValueError("not enough notes in order"))
+
         ord_cuttoff = self.order[:len(nt_on)]
-        print(ord_cuttoff)
         ord_less = sorted(range(len(ord_cuttoff)),key=ord_cuttoff.__getitem__)
-        print(ord_less)
         for ind, pos in enumerate(ord_less):
             ord_cuttoff[pos] = ind
-        print(ord_cuttoff)
         return [ nt_on[i] for i in ord_cuttoff  ]
-
-
 
     def note_msg(self, msg):
         # change notes_on either note on or off
@@ -56,9 +55,11 @@ class arpeggiator():
             self.notes_on[msg.note] = True
 
         if msg.type == "note_off":
+            
             # if removing next note to play make it the next one
             if self.next_note_play == msg.note and self.notes_on_list():
                 self.shift_next_note()
+            
             self.notes_on[msg.note] = False
 
     def shift_next_note(self):
@@ -83,7 +84,7 @@ class arpeggiator():
                         self.randomise_order()
                     # if its first note then not note playing
                     self.note_playing = notes_out[0]
-                    return [mido.Message('note_on', note = notes_out[0])]
+                    return [mido.Message('note_on', note = notes_out[0], velocity = 127)]
 
 
                 elif self.note_playing:
