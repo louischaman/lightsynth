@@ -39,12 +39,20 @@ def map_note(mapping, msg):
     return(msg)
 
 
-def user_midi():
+def user_midi(which_device_ind = None):
     midi_devices = mido.get_input_names()
-    port_dict = {}
+    port_dict = {}    
+
+    if not which_device_ind is None:
+        device_name = midi_devices[which_device_ind]
+        inport = mido.open_input(device_name)
+        port_dict[device_name] = inport
+        return(port_dict)
+
     for i in range(len(midi_devices)):
         pprint((i, midi_devices[i]) )
     while True:
+
         user_input = raw_input('select midi device number: ')
         if user_input is "" or midi_devices is []:
             break
@@ -58,13 +66,22 @@ def user_midi():
 
     return(port_dict)
 
-def user_midi_output():
+def user_midi_output(which_device_ind = None):
     midi_devices = mido.get_output_names()
     port_dict = {}
+    if not which_device_ind is None:
+    
+        device_name = midi_devices[which_device_ind]
+        inport = mido.open_output(device_name)
+        port_dict[device_name] = inport
+        return(port_dict)
+
     for i in range(len(midi_devices)):
         pprint((i, midi_devices[i]) )
     while True:
+        
         user_input = raw_input('select midi device number: ')
+
         if user_input is "" or midi_devices is []:
             break
         try:
@@ -95,8 +112,29 @@ def iter_pending_clean(midi_port, clean_velocity = True):
 
             message_queue[msg_no] = msg
 
-        
+        if(msg.type == "pitchwheel"):
+            message_queue[msg_no] = msg
+
         msg_no = msg_no + 1
         
     message_queue = message_queue.values()
     return message_queue
+
+class note_store:
+    def __init__(self):
+        self.notes_on = [False] * 128
+        self.last_note = [None] * 128
+    
+    def on_msg(self, msg):
+        if msg.type == "note_on":
+            self.notes_on[msg.note] = True
+            self.last_note[msg.note] = msg
+        elif msg.type == "note_off":
+            self.notes_on[msg.note] = False
+            self.last_note[msg.note] = msg
+    
+    def any_notes_on(self):
+        return any(self.notes_on)
+    
+    def which_notes_on(self):
+        return [note for note, note_val in enumerate(self.notes_on) if note_val]
