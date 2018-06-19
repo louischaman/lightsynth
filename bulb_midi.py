@@ -29,6 +29,9 @@ arp = arpeggiator(rate = 120*4)
 last_played_time = time.time()
 last_auto_time = time.time()
 
+program_int = 0
+n_sounds = 32 + 1
+
 def cc_scaler(xmin,xmax):
     return (lambda x: (float(x)/127) * (xmax - xmin) + xmin)
 
@@ -40,7 +43,6 @@ print(arp_rate(100))
 def send_msg(midi_out_port, msg):
     print(msg)
     midi_out_port.send(msg)
-
 
 
 while 1:
@@ -77,11 +79,20 @@ while 1:
                         send_msg(midi_out_port, msg_off)
 
                 if msg.type == "control_change":
-                    if msg.control == 101:
+                    if msg.control == 26:
                         arp.rate = arp_rate(msg.value)
-                    if msg.control == 113 and msg.value == 127:
+                    elif msg.control == 113 and msg.value == 127:
                         arp_on = not arp_on
-                    send_msg(midi_out_port, msg)
+                    elif msg.control == 114 and msg.value == 127:
+                        program_int = (program_int - 1) % n_sounds
+                        msg = mido.Message("program_change", program = program_int)
+                        send_msg(midi_out_port, msg)
+                    elif msg.control == 115 and msg.value == 127:
+                        program_int = (program_int + 1) % n_sounds
+                        msg = mido.Message("program_change", program = program_int)
+                        send_msg(midi_out_port, msg)
+                    else:
+                        send_msg(midi_out_port, msg)
 
                 
                 if msg.type == "pitchwheel":
