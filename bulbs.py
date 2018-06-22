@@ -5,6 +5,10 @@ import utils.miditools as mt
 from utils.dmxtools import * 
 from collections import OrderedDict
 import copy
+import struct
+import serial
+import time
+import utils.arduino_tools as at
 
 from pprint import pprint
 
@@ -12,6 +16,7 @@ note_old = []
 light_dict = {0:20}#,1:30,2:40}
 
 #get dmx devices from user input
+print("dmx port = ")
 dmx_port = user_dmx()
 
 #dmx_port = pysimpledmx.DMXConnection("COM11")
@@ -19,8 +24,29 @@ dmx_port = user_dmx()
 set_light_cheap(dmx_port, 20, (1,0,0))
 
 lights = {}
+
+
+
+## stuff for arduino dimmer
+print("arduino port = ")
+arduino_port = at.user_serial() 
+time.sleep(3)
+
+out_array = [0]*10
+out_array[8]
+out_array[9]
+arduino_working = [0,1,2,3,6,7]
+
+def set_light_arduino(dmx_port, root_dmx, light_val):
+    out_array[arduino_working[root_dmx-8]] = int(255*light_val[0])
+
+at.send_array(arduino_port, [200]*10)  
+
 for i in range(8):
     lights[i] = {'root_dmx': i, 'func': set_light_bulb}
+for i in range(8,(8+6)):
+    lights[i] = {'root_dmx': i, 'func': set_light_arduino}
+
 
 
 print("on")
@@ -59,7 +85,7 @@ instrument = inst.LightInstrument(
     light_list=lights.keys(), 
     cc_controls = cc_controls,
     envelope_params = envelope_params,
-    mode = "single" )
+    mode = "cycle" )
 
 
 modes_ind = 1
@@ -93,5 +119,6 @@ while 1:
         
         #val = [col/max_val for col in val]
         light['func'](dmx_port, light['root_dmx'], val)
-    
+    print(out_array)
+    at.send_array(arduino_port, out_array)
     #dmx_port.render()
