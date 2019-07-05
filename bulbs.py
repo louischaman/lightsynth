@@ -1,14 +1,13 @@
 import mido
 import lightsynth.light_instrument as inst
-import pysimpledmx
 import utils.miditools as mt
 from utils.dmxtools import * 
 from collections import OrderedDict
 import copy
 import struct
-import serial
 import time
 import utils.arduino_tools as at
+import random
 
 from pprint import pprint
 
@@ -24,8 +23,6 @@ dmx_port = user_dmx()
 set_light_cheap(dmx_port, 20, (1,0,0))
 
 lights = {}
-
-
 
 ## stuff for arduino dimmer
 print("arduino port = ")
@@ -87,13 +84,15 @@ instrument = inst.LightInstrument(
     envelope_params = envelope_params,
     mode = "cycle" )
 
+for i, light in instrument.light_envs.items():
+    light.env.lfo_rate = random.uniform(1, 3)
 
 modes_ind = 1
 
 instrument_rack = [instrument]
 
 while 1:
-    for device, midi_port in port_dict.iteritems():
+    for device, midi_port in port_dict.items():
 
         # if two cc messages with the same control and channel have come then only append most recent
         message_queue = mt.iter_pending_clean(midi_port)
@@ -114,7 +113,7 @@ while 1:
 
     light_vals = instrument_rack[0].get_light_output()
     
-    for light_key, light in lights.iteritems():
+    for light_key, light in lights.items():
         val = light_vals[light_key] # [ light_vals2[light_key][i] + light_vals[light_key][i] for i in range(3)] 
         
         #val = [col/max_val for col in val]

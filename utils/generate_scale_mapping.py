@@ -1,7 +1,7 @@
 import bisect
 import copy
 import yaml
-import miditools as mt
+from . import miditools as mt
 
 def get_nearest_note(note, scale):
     scale = copy.copy(scale) + [12]
@@ -9,7 +9,7 @@ def get_nearest_note(note, scale):
     return (scale[i])
 
 def generate_scale_mapping(scale):
-    in_notes = range(150)
+    in_notes = list(range(150))
     note_letter = [(note-21) % 12 for note in in_notes]
     octave = [(in_notes[i] - note_letter[i] + 3)/12 - 2   for i in in_notes]
     scale_letter = [ get_nearest_note(note, scale) for note in note_letter ]
@@ -32,8 +32,8 @@ if __name__=="__main__":
     out_dict = mt.user_midi_output()
 
     while 1:
-        for device, midi_port_in in port_dict.iteritems():
-            for device, midi_out_port in out_dict.iteritems():
+        for device, midi_port_in in port_dict.items():
+            for device, midi_out_port in out_dict.items():
 
                 # if two cc messages with the same control and channel have come then only append most recent
                 for msg in midi_port_in.iter_pending():

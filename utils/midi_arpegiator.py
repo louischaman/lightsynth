@@ -8,7 +8,7 @@ goes through the notes pressed down and plays them in sequence
 '''
 
 class arpeggiator():
-    def __init__(self, rate = 240, order = range(25), randomise = True):
+    def __init__(self, rate = 240, order = list(range(25)), randomise = True):
         '''
         set up 
             whether up or down 
@@ -111,7 +111,7 @@ if __name__=="__main__":
 
     while notes_chord_off:
         for note in arp.get_notes():
-            print note
+            print(note)
         
         if time.time()>start_time + 1 :
             arp.note_msg(notes_chord_off.pop())

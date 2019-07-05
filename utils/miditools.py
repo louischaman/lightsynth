@@ -13,7 +13,7 @@ def same_channel_control(note_a, note_b):
     return(is_same)
 
 def toggle_cc(status, msg):
-    for cc, value in status.iteritems():
+    for cc, value in status.items():
         if same_message(cc, msg):
             value = (not value) * 127
             msg.value = value
@@ -22,7 +22,7 @@ def toggle_cc(status, msg):
 
 def change_cc(mapping, msg):
     if msg.type == "control_change":
-        for cc_from, cc_to in mapping.iteritems():
+        for cc_from, cc_to in mapping.items():
             if same_channel_control(cc_from, msg):
 
                 msg.channel = cc_to.channel
@@ -30,12 +30,11 @@ def change_cc(mapping, msg):
                 break
     return(msg)
 
+
+
 def map_note(mapping, msg):
     if msg.type == "note_on" or msg.type == "note_off":
-        try:
-            msg.note = mapping[msg.note]
-        except:
-            pass
+        msg.note = int(mapping[msg.note])
     return(msg)
 
 
@@ -53,7 +52,7 @@ def user_midi(which_device_ind = None):
         pprint((i, midi_devices[i]) )
     while True:
 
-        user_input = raw_input('select midi device number: ')
+        user_input = input('select midi device number: ')
         if user_input is "" or midi_devices is []:
             break
         try:
@@ -80,7 +79,7 @@ def user_midi_output(which_device_ind = None):
         pprint((i, midi_devices[i]) )
     while True:
         
-        user_input = raw_input('select midi device number: ')
+        user_input = input('select midi device number: ')
 
         if user_input is "" or midi_devices is []:
             break

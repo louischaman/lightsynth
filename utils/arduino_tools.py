@@ -1,6 +1,6 @@
 
 import serial
-from list_ports import serial_ports
+from .list_ports import serial_ports
 from pprint import pprint
 import struct
 
@@ -24,7 +24,7 @@ def user_serial():
     available_ports = serial_ports()
     if len(available_ports ) > 0:
         pprint([ (i, available_ports[i]) for i in range(len(available_ports))] )
-        which_port = int(raw_input('select serial port number: '))
+        which_port = int(input('select serial port number: '))
         
         dmx_port = serial.Serial(available_ports[which_port], 115200, parity = serial.PARITY_NONE, stopbits = serial.STOPBITS_ONE, bytesize = serial.EIGHTBITS, timeout=0.1)
     else:

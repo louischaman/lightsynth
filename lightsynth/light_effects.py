@@ -1,4 +1,4 @@
-import light_function as lf
+from . import light_function as lf
 from copy import deepcopy
 import colorsys
 import time
@@ -8,15 +8,14 @@ class LightEffects():
     Class for strobes and other effect lighting
     non-rgb
 
+    for triggering the martin note_time is established
+    for this a pulse is sent
+    while pulse is high note_time is true
+                
+
     '''
 
-    def __init__(self, on_notes=[42], trigger_note = [43], switch_notes=[60], cc_controls={}, light_type="PS", note_channel = range(16)):
-        '''
-        for triggering the martin note_time is established
-        for this a pulse is sent
-        while pulse is high note_time is true
-                
-        '''
+    def __init__(self, on_notes=[42], trigger_note = [43], switch_notes=[60], cc_controls={}, light_type="PS", note_channel = list(range(16)) ):
 
         # switch notes only have on actions for latching
         self.switch_notes = switch_notes
@@ -108,15 +107,6 @@ class LightEffects():
                 return([self.brightness, 0,0,0])
             else:
                 return([self.brightness, self.duration, self.rate, self.effect])
-
-
-        elif self.light_type == "switch":
-            if self.is_note_time:
-                print([self.brightness, 0,0,0])
-                return([self.brightness, 0,0,0])
-            else:
-                return([self.brightness, self.duration, self.rate, self.effect])
-
 
         elif self.light_type == "PS":
             return([self.rate, self.brightness])

@@ -65,7 +65,7 @@ instrument2 = inst.LightInstrument(
 instrument_rack = [instrument, instrument2]
 
 while 1:
-    for device, midi_port in port_dict.iteritems():
+    for device, midi_port in port_dict.items():
 
         # if two cc messages with the same control and channel have come then only append most recent
         message_queue = mt.iter_pending_clean(midi_port)
@@ -77,6 +77,6 @@ while 1:
             
     light_vals = instrument_rack[0].get_light_output()
     light_vals2 = instrument_rack[1].get_light_output()
-    for light_key, light in lights.iteritems():
+    for light_key, light in lights.items():
         val = [ light_vals2[light_key][i] + light_vals[light_key][i] for i in range(3)] 
         light['func'](dmx_port, light['root_dmx'], val)

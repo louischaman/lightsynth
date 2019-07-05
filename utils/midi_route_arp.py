@@ -9,8 +9,8 @@ out_dict = mt.user_midi_output()
 arp = arpeggiator(rate = 120*4, order = [10,0,9,1,8,2,7,3,6,5,4])
 #arp.randomise_order()
 while 1:
-    for device, midi_port_in in port_dict.iteritems():
-        for device, midi_out_port in out_dict.iteritems():
+    for device, midi_port_in in port_dict.items():
+        for device, midi_out_port in out_dict.items():
 
             # if two cc messages with the same control and channel have come then only append most recent
             for msg in mt.iter_pending_clean(midi_port_in):
