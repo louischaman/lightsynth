@@ -63,7 +63,7 @@ public:
     }
 };
 
-// TODO: Apply hysteresis.
+template<class MIDI_T, MIDI_T& midi>
 class MidiPot {
 public:
     const MidiCC cc;
@@ -72,7 +72,7 @@ private:
    uint32_t value;
 
 public:
-    MidiPot(const uint8_t channel, const uint8_t control, const uint8_t pin, const uint8_t debounceTimeMillis) : cc(channel, control), adcChannel(pin) {}
+    MidiPot(const uint8_t channel, const uint8_t control, const uint8_t pin) : cc(channel, control), adcChannel(pin) {}
 
     bool update() { 
         // Average the pot output for some noise immunity.
@@ -93,6 +93,14 @@ public:
         return false;
     }
     uint8_t read() const { return (value >> 3); }
+
+    void readAndSend() {
+        if (update()) {
+            const auto ccVal = read();
+            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            SERIAL_DEBUG_MIDI(cc, ccVal);
+        }
+    }
 };
 
 
