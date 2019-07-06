@@ -94,25 +94,20 @@ MidiPot fxRate(channel, 12, 3, bounceTime);
 
 
 void setup() {
-    // Serial.begin(115200);
-    // while (!Serial);
+    Serial.begin(115200);
+    while (!Serial);
     MIDI.begin();
-    // Serial.println("Arduino ready.");
+    Serial.println("Arduino ready.");
 }
 
 void loop() {
     // if (autoPlay.read()) {
     //     Serial.println("1");
     // }
-
-    usbMIDI.sendControlChange(arpRate.cc.channel, arpRate.read(), arpRate.cc.control);
-    // Serial.print("Ch: ");
-    // Serial.print(arpRate.cc.channel);
-    // Serial.print(" Ctrl: ");
-    // Serial.print(arpRate.cc.control);
-    // Serial.print(" Val: ");
-    // Serial.println(arpRate.read());
-
+    if (arpRate.update()) {
+        usbMIDI.sendControlChange(arpRate.cc.channel, arpRate.read(), arpRate.cc.control);
+        SERIAL_DEBUG_MIDI(arpRate.cc, arpRate.read());
+    }
     // usbMIDI.sendNoteOn(note, velocity, channel);
     // delay(200);
     // usbMIDI.sendNoteOff(note, velocity, channel);
