@@ -35,17 +35,28 @@ public:
     const MidiCC cc;
 private:
     Bounce button;
+    bool value {};
 
 public:
     MidiButton(const uint8_t channel, const uint8_t control, const uint8_t pin, const uint8_t debounceTimeMillis) : cc(channel, control), button(pin, debounceTimeMillis) {}
 
-    inline bool update() { return button.update(); }
-    inline bool read() { return button.read(); }
-    bool readAndSend()
+    bool update() {
+        button.update();
+        const auto newVal = button.read();
+        if (newVal != value) {
+            value = newVal;
+            return true;
+        }
+        return false;
+    }
+    inline bool read() const { return value; }
+    void readAndSend()
     {
-        const auto ccVal = read();
-        midi.sendControlChange(cc.channel, ccVal, cc.control);
-        SERIAL_DEBUG_MIDI(cc, ccVal);
+        if (update()) {
+            const auto ccVal = read();
+            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            SERIAL_DEBUG_MIDI(cc, ccVal);
+        }
     }
 };
 
@@ -58,7 +69,7 @@ public:
     const MidiCC cc;
 private:
     std::array<Bounce, n_positions> positions;
-    uint_fast8_t value;
+    uint_fast8_t value {};
 
 public:
     MidiSwitch(const uint8_t channel, const uint8_t control, std::array<Bounce, n_positions> _positions) 

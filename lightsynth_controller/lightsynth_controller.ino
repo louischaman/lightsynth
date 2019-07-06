@@ -30,38 +30,36 @@ static constexpr auto bounceTime {5};
 
 // Selector - Choose between 6 voices
 // range of values [0:5[
-constexpr auto selectorSwitchPositions {6};
-const std::array<Bounce, selectorSwitchPositions> selectorSwitch {
-    Bounce(4, bounceTime),
-    Bounce(5, bounceTime),
-    Bounce(6, bounceTime),
-    Bounce(7, bounceTime),
-    Bounce(8, bounceTime),
-    Bounce(9, bounceTime),
-};
-MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions> selector(channel, 0, selectorSwitch);
+// constexpr auto selectorSwitchPositions {6};
+// const std::array<Bounce, selectorSwitchPositions> selectorSwitch {
+//     Bounce(4, bounceTime),
+//     Bounce(5, bounceTime),
+//     Bounce(6, bounceTime),
+//     Bounce(7, bounceTime),
+//     Bounce(8, bounceTime),
+//     Bounce(9, bounceTime),
+// };
+// MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions> selector(channel, 0, selectorSwitch);
 
 // Auto Play button
-MidiButton<decltype(usbMIDI), usbMIDI> autoPlay(channel, 1, 10, bounceTime);
+MidiButton<decltype(usbMIDI), usbMIDI> autoPlay(channel, 1, 8, bounceTime);
 
-// // // Arp on/off
-// MidiButton<decltype(usbMIDI), usbMIDI> arpOnOff(channel, 2, 11, bounceTime);
-// // Bounce arpOnOffButton(, bounceTime);
+// Arp on/off
+MidiButton<decltype(usbMIDI), usbMIDI> arpOnOff(channel, 2, 9, bounceTime);
 
-// // // Scale on/off
-// MidiButton<decltype(usbMIDI), usbMIDI> scaleOnOff(channel, 3, 12, bounceTime);
-// // Bounce scaleOnOffButton(, bounceTime);
+// Scale on/off
+MidiButton<decltype(usbMIDI), usbMIDI> scaleOnOff(channel, 3, 10, bounceTime);
 
 // // Sustain on/half/off
 // constexpr auto sustainAmountPositions {2};
 // const std::array<Bounce, sustainAmountPositions> sustainAmount {
-//     Bounce(13, bounceTime),
-//     Bounce(14, bounceTime),
+//     Bounce(11, bounceTime),
+//     Bounce(12, bounceTime),
 // };
 // MidiSwitch<decltype(usbMIDI), usbMIDI, sustainAmountPositions> sustain(channel, 4, sustainAmount);
 
-// // FX on/off
-// MidiButton<decltype(usbMIDI), usbMIDI> fxOnOff(channel, 5, 15, bounceTime);
+// FX on/off
+MidiButton<decltype(usbMIDI), usbMIDI> fxOnOff(channel, 5, 14, bounceTime);
 
 
 
@@ -99,13 +97,17 @@ void setup() {
     MIDI.begin();
     Serial.println("Arduino ready.");
 
-    for (auto i = 0; i != 16; ++i) { pinMode(i, INPUT_PULLUP); }
+    for (auto i = 3; i != 15; ++i) { pinMode(i, INPUT_PULLUP); }
 }
 
 void loop() {
-    selector.readAndUpdate();
+    // selector.readAndUpdate();
 
     autoPlay.readAndSend();
+    arpOnOff.readAndSend();
+    scaleOnOff.readAndSend();
+
+    fxOnOff.readAndSend();
 
     arpRate.readAndSend();
     onsetAmount.readAndSend();
@@ -122,5 +124,5 @@ void loop() {
     // delay(200);
     // usbMIDI.sendNoteOff(note, velocity, channel);
     while (usbMIDI.read()) {}
-    // delay(50);
+    delay(50);
 }
