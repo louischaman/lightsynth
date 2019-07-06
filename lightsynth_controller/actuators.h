@@ -54,7 +54,7 @@ public:
     {
         if (update()) {
             const auto ccVal = read();
-            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            midi.sendControlChange(cc.control, ccVal, cc.channel);
             SERIAL_DEBUG_MIDI(cc, ccVal);
         }
     }
@@ -101,7 +101,7 @@ public:
     {
         if (update()){
             const auto ccVal = read();
-            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            midi.sendControlChange(cc.control, ccVal, cc.channel);
             SERIAL_DEBUG_MIDI(cc, ccVal);
         }
     }
@@ -141,7 +141,7 @@ public:
     void readAndSend() {
         if (update()) {
             const auto ccVal = read();
-            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            midi.sendControlChange(cc.control, ccVal, cc.channel);
             SERIAL_DEBUG_MIDI(cc, ccVal);
         }
     }
