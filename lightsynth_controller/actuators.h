@@ -29,6 +29,7 @@ void SERIAL_DEBUG_MIDI(const MidiCC cc, const uint_fast8_t value) {
         Serial.println(value);
 }
 
+template<class MIDI_T, MIDI_T& midi>
 class MidiButton {
 public:
     const MidiCC cc;
@@ -38,7 +39,14 @@ private:
 public:
     MidiButton(const uint8_t channel, const uint8_t control, const uint8_t pin, const uint8_t debounceTimeMillis) : cc(channel, control), button(pin, debounceTimeMillis) {}
 
-    bool read() { button.update(); return button.read(); }
+    inline bool update() { return button.update(); }
+    inline bool read() { return button.read(); }
+    bool readAndSend()
+    {
+        const auto ccVal = read();
+        midi.sendControlChange(cc.channel, ccVal, cc.control);
+        SERIAL_DEBUG_MIDI(cc, ccVal);
+    }
 };
 
 

@@ -41,8 +41,8 @@ const std::array<Bounce, selectorSwitchPositions> selectorSwitch {
 };
 MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions> selector(channel, 0, selectorSwitch);
 
-// // Auto Play button
-// MidiButton<decltype(usbMIDI), usbMIDI> autoPlay(channel, 1, 10, bounceTime);
+// Auto Play button
+MidiButton<decltype(usbMIDI), usbMIDI> autoPlay(channel, 1, 10, bounceTime);
 
 // // // Arp on/off
 // MidiButton<decltype(usbMIDI), usbMIDI> arpOnOff(channel, 2, 11, bounceTime);
@@ -104,6 +104,8 @@ void setup() {
 
 void loop() {
     selector.readAndUpdate();
+
+    autoPlay.readAndSend();
 
     arpRate.readAndSend();
     onsetAmount.readAndSend();
