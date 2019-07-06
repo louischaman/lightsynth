@@ -123,20 +123,23 @@ private:
 public:
     MidiPot(const uint8_t channel, const uint8_t control, const uint8_t pin) : cc(channel, control), adcChannel(pin) {}
 
+    static constexpr uint_fast8_t hysterysis {16};
     bool update() { 
         // Average the pot output for some noise immunity.
         const auto newValue1 = analogRead(adcChannel);
-        delay(1);
         const auto newValue2 = analogRead(adcChannel);
-        delay(1);
         const auto newValue3 = analogRead(adcChannel);
+        const auto newValue4 = analogRead(adcChannel);
+        const auto newValue5 = analogRead(adcChannel);
         
         // ADC output should be 10-bit, midi cc is 7-bit.
         // Only update value if all three sample values are more than 1 midi cc
         // tick off the old value.
-        if (checkDiff(newValue1, value, 8)
-                && checkDiff(newValue2, value, 8)
-                && checkDiff(newValue3, value, 8)) {
+        if (checkDiff(newValue1, value, hysterysis)
+                && checkDiff(newValue2, value, hysterysis)
+                && checkDiff(newValue3, value, hysterysis)
+                && checkDiff(newValue4, value, hysterysis)
+                && checkDiff(newValue5, value, hysterysis)) {
             value = newValue1;
             return true;
         }
