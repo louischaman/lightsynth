@@ -68,23 +68,23 @@ MidiButton fxOnOff(channel, 5, 15, bounceTime);
 // Arp rate pot
 MidiPot<decltype(usbMIDI), usbMIDI> arpRate(channel, 6, 9);
 
-// // Onset pot
-// MidiPot onsetAmount(channel, 8, 11, bounceTime);
+// Onset pot
+MidiPot<decltype(usbMIDI), usbMIDI> onsetAmount(channel, 8, 11);
 
-// // Length pot
-// MidiPot lengthAmount(channel, 7, 12, bounceTime);
+// Length pot
+MidiPot<decltype(usbMIDI), usbMIDI> lengthAmount(channel, 7, 12);
 
-// // Reverb Dry/Wet pot
-// MidiPot fxReverbDryWet(channel, 6, 13, bounceTime);
+// Reverb Dry/Wet pot
+MidiPot<decltype(usbMIDI), usbMIDI> fxReverbDryWet(channel, 6, 13);
 
-// // Echo Dry/Wet pot
-// MidiPot fxEchoDryWet(channel, 5, 14, bounceTime);
+// Echo Dry/Wet pot
+MidiPot<decltype(usbMIDI), usbMIDI> fxEchoDryWet(channel, 5, 14);
 
-// // FX Fade pot
-// MidiPot fxFade(channel, 11, 4, bounceTime);
+// FX Fade pot
+MidiPot<decltype(usbMIDI), usbMIDI> fxFade(channel, 11, 4);
 
-// // FX Rate pot
-// MidiPot fxRate(channel, 12, 3, bounceTime);
+// FX Rate pot
+MidiPot<decltype(usbMIDI), usbMIDI> fxRate(channel, 12, 3);
 
 
 //// Outputs
@@ -106,6 +106,13 @@ void loop() {
     //     SERIAL_DEBUG_MIDI(arpRate.cc, arpRate.read());
     // }
     arpRate.readAndSend();
+    onsetAmount.readAndSend();
+    lengthAmount.readAndSend();
+    fxReverbDryWet.readAndSend();
+    fxEchoDryWet.readAndSend();
+    fxFade.readAndSend();
+    fxRate.readAndSend();
+
 
 
 
