@@ -6,9 +6,14 @@
 
 namespace
 {
-inline uint32_t getAbsDiff(uint32_t a, uint32_t b)
+inline uint32_t getAbsDiff(const uint32_t a, const uint32_t b)
 {
     return (a > b) ? (a - b) : (b - a);
+}
+
+inline uint32_t checkDiff(const uint32_t a, const uint32_t b, const uint32_t maxDiff)
+{ 
+    return (getAbsDiff(a, b) >= maxDiff);
 }
 }
 
@@ -54,7 +59,7 @@ public:
     {
         if (update()) {
             const auto ccVal = read();
-            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            midi.sendControlChange(cc.control, ccVal, cc.channel);
             SERIAL_DEBUG_MIDI(cc, ccVal);
         }
     }
@@ -101,7 +106,7 @@ public:
     {
         if (update()){
             const auto ccVal = read();
-            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            midi.sendControlChange(cc.control, ccVal, cc.channel);
             SERIAL_DEBUG_MIDI(cc, ccVal);
         }
     }
@@ -118,20 +123,24 @@ private:
 public:
     MidiPot(const uint8_t channel, const uint8_t control, const uint8_t pin) : cc(channel, control), adcChannel(pin) {}
 
+    static constexpr uint_fast8_t hysterysis {16};
     bool update() { 
         // Average the pot output for some noise immunity.
-        const uint32_t newValue1 = analogRead(adcChannel);
-        const uint32_t newValue2 = analogRead(adcChannel);
-        const uint32_t newValue3 = analogRead(adcChannel);
-        const uint32_t newValue4 = analogRead(adcChannel);
-
-        const auto newValue = (newValue1 + newValue2 + newValue3 + newValue4) >> 2;
-
-
-        // Update value if it is new and return true.
-        // Builds in some hysterysis to avoid spamming too much.
-        if (getAbsDiff(newValue, value) >= 10) {
-            value = newValue;
+        const auto newValue1 = analogRead(adcChannel);
+        const auto newValue2 = analogRead(adcChannel);
+        const auto newValue3 = analogRead(adcChannel);
+        const auto newValue4 = analogRead(adcChannel);
+        const auto newValue5 = analogRead(adcChannel);
+        
+        // ADC output should be 10-bit, midi cc is 7-bit.
+        // Only update value if all three sample values are more than 1 midi cc
+        // tick off the old value.
+        if (checkDiff(newValue1, value, hysterysis)
+                && checkDiff(newValue2, value, hysterysis)
+                && checkDiff(newValue3, value, hysterysis)
+                && checkDiff(newValue4, value, hysterysis)
+                && checkDiff(newValue5, value, hysterysis)) {
+            value = newValue1;
             return true;
         }
         return false;
@@ -141,7 +150,7 @@ public:
     void readAndSend() {
         if (update()) {
             const auto ccVal = read();
-            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            midi.sendControlChange(cc.control, ccVal, cc.channel);
             SERIAL_DEBUG_MIDI(cc, ccVal);
         }
     }
