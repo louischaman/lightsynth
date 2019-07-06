@@ -42,24 +42,44 @@ public:
 };
 
 
-template<uint8_t n_positions>
+template<
+    class MIDI_T, MIDI_T& midi,
+    uint8_t n_positions>
 class MidiSwitch {
 public:
     const MidiCC cc;
 private:
-    const std::array<Bounce, n_positions> positions;
+    std::array<Bounce, n_positions> positions;
+    uint_fast8_t value;
 
 public:
     MidiSwitch(const uint8_t channel, const uint8_t control, std::array<Bounce, n_positions> _positions) 
         : cc(channel, control), positions(_positions) {}
     
-    uint8_t read() const {
-        auto position {0U};
+    bool update() {
+        auto posCtr {0U};
         for(auto &position: positions) {
+            position.update();
             if (position.read()) { break; }
-            ++position;
+            ++posCtr;
         }
-        return position;
+
+        if (value != posCtr){
+            value = posCtr;
+            return true;
+        }
+        return false;
+    }
+
+    uint8_t read() const { return value; }
+
+    void readAndUpdate()
+    {
+        if (update()){
+            const auto ccVal = read();
+            midi.sendControlChange(cc.channel, ccVal, cc.control);
+            SERIAL_DEBUG_MIDI(cc, ccVal);
+        }
     }
 };
 

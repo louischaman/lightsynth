@@ -39,29 +39,29 @@ const std::array<Bounce, selectorSwitchPositions> selectorSwitch {
     Bounce(8, bounceTime),
     Bounce(9, bounceTime),
 };
-MidiSwitch<selectorSwitchPositions> selector(channel, 0, selectorSwitch);
+MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions> selector(channel, 0, selectorSwitch);
 
-// Auto Play button
-MidiButton autoPlay(channel, 1, 10, bounceTime);
+// // Auto Play button
+// MidiButton<decltype(usbMIDI), usbMIDI> autoPlay(channel, 1, 10, bounceTime);
 
-// // Arp on/off
-MidiButton arpOnOff(channel, 2, 11, bounceTime);
-// Bounce arpOnOffButton(, bounceTime);
+// // // Arp on/off
+// MidiButton<decltype(usbMIDI), usbMIDI> arpOnOff(channel, 2, 11, bounceTime);
+// // Bounce arpOnOffButton(, bounceTime);
 
-// // Scale on/off
-MidiButton scaleOnOff(channel, 3, 12, bounceTime);
-// Bounce scaleOnOffButton(, bounceTime);
+// // // Scale on/off
+// MidiButton<decltype(usbMIDI), usbMIDI> scaleOnOff(channel, 3, 12, bounceTime);
+// // Bounce scaleOnOffButton(, bounceTime);
 
-// Sustain on/half/off
-constexpr auto sustainAmountPositions {2};
-const std::array<Bounce, sustainAmountPositions> sustainAmount {
-    Bounce(13, bounceTime),
-    Bounce(14, bounceTime),
-};
-MidiSwitch<sustainAmountPositions> sustain(channel, 4, sustainAmount);
+// // Sustain on/half/off
+// constexpr auto sustainAmountPositions {2};
+// const std::array<Bounce, sustainAmountPositions> sustainAmount {
+//     Bounce(13, bounceTime),
+//     Bounce(14, bounceTime),
+// };
+// MidiSwitch<decltype(usbMIDI), usbMIDI, sustainAmountPositions> sustain(channel, 4, sustainAmount);
 
-// FX on/off
-MidiButton fxOnOff(channel, 5, 15, bounceTime);
+// // FX on/off
+// MidiButton<decltype(usbMIDI), usbMIDI> fxOnOff(channel, 5, 15, bounceTime);
 
 
 
@@ -98,13 +98,13 @@ void setup() {
     while (!Serial);
     MIDI.begin();
     Serial.println("Arduino ready.");
+
+    for (auto i = 0; i != 16; ++i) { pinMode(i, INPUT_PULLUP); }
 }
 
 void loop() {
-    // if (arpRate.update()) {
-    //     usbMIDI.sendControlChange(arpRate.cc.channel, arpRate.read(), arpRate.cc.control);
-    //     SERIAL_DEBUG_MIDI(arpRate.cc, arpRate.read());
-    // }
+    selector.readAndUpdate();
+
     arpRate.readAndSend();
     onsetAmount.readAndSend();
     lengthAmount.readAndSend();
