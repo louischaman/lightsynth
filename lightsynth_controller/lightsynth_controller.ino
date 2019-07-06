@@ -30,16 +30,16 @@ static constexpr auto bounceTime {5};
 
 // Selector - Choose between 6 voices
 // range of values [0:5[
-// constexpr auto selectorSwitchPositions {6};
-// const std::array<Bounce, selectorSwitchPositions> selectorSwitch {
-//     Bounce(4, bounceTime),
-//     Bounce(5, bounceTime),
-//     Bounce(6, bounceTime),
-//     Bounce(7, bounceTime),
-//     Bounce(8, bounceTime),
-//     Bounce(9, bounceTime),
-// };
-// MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions> selector(channel, 0, selectorSwitch);
+constexpr auto selectorSwitchPositions {6};
+const std::array<Bounce, selectorSwitchPositions> selectorSwitch {
+    Bounce(2, bounceTime),
+    Bounce(3, bounceTime),
+    Bounce(4, bounceTime),
+    Bounce(5, bounceTime),
+    Bounce(6, bounceTime),
+    Bounce(7, bounceTime),
+};
+MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions> selector(channel, 0, selectorSwitch);
 
 // Auto Play button
 MidiButton<decltype(usbMIDI), usbMIDI> autoPlay(channel, 1, 8, bounceTime);
@@ -97,11 +97,12 @@ void setup() {
     MIDI.begin();
     Serial.println("Arduino ready.");
 
-    for (auto i = 3; i != 15; ++i) { pinMode(i, INPUT_PULLUP); }
+    for (auto i = 2; i != 15; ++i) { pinMode(i, INPUT_PULLUP); }
 }
 
 void loop() {
     // selector.readAndUpdate();
+    // Serial.println(digitalRead(2));
 
     autoPlay.readAndSend();
     arpOnOff.readAndSend();
