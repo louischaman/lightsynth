@@ -50,13 +50,13 @@ MidiButton<decltype(usbMIDI), usbMIDI> arpOnOff(channel, 2, 9, bounceTime);
 // Scale on/off
 MidiButton<decltype(usbMIDI), usbMIDI> scaleOnOff(channel, 3, 10, bounceTime);
 
-// // Sustain on/half/off
-// constexpr auto sustainAmountPositions {2};
-// const std::array<Bounce, sustainAmountPositions> sustainAmount {
-//     Bounce(11, bounceTime),
-//     Bounce(12, bounceTime),
-// };
-// MidiSwitch<decltype(usbMIDI), usbMIDI, sustainAmountPositions> sustain(channel, 4, sustainAmount);
+// Sustain on/half/off
+constexpr auto sustainAmountPositions {2};
+const std::array<Bounce, sustainAmountPositions> sustainAmount {
+    Bounce(11, bounceTime),
+    Bounce(12, bounceTime),
+};
+MidiSwitch<decltype(usbMIDI), usbMIDI, sustainAmountPositions> sustain(channel, 4, sustainAmount);
 
 // FX on/off
 MidiButton<decltype(usbMIDI), usbMIDI> fxOnOff(channel, 5, 14, bounceTime);
@@ -101,18 +101,18 @@ void setup() {
 }
 
 void loop() {
-    // selector.readAndUpdate();
-    // Serial.println(digitalRead(2));
-
+    selector.readAndSend();
     autoPlay.readAndSend();
+
+    arpRate.readAndSend();
     arpOnOff.readAndSend();
     scaleOnOff.readAndSend();
 
-    fxOnOff.readAndSend();
-
-    arpRate.readAndSend();
     onsetAmount.readAndSend();
     lengthAmount.readAndSend();
+    sustain.readAndSend();
+
+    fxOnOff.readAndSend();
     fxReverbDryWet.readAndSend();
     fxEchoDryWet.readAndSend();
     fxFade.readAndSend();

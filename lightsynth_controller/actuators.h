@@ -29,7 +29,7 @@ void SERIAL_DEBUG_MIDI(const MidiCC cc, const uint_fast8_t value) {
         Serial.println(value);
 }
 
-template<class MIDI_T, MIDI_T& midi>
+template<class MIDI_T, MIDI_T& midi, bool invert = false>
 class MidiButton {
 public:
     const MidiCC cc;
@@ -49,7 +49,7 @@ public:
         }
         return false;
     }
-    inline bool read() const { return value; }
+    inline bool read() const { return invert ? !value : value; }
     void readAndSend()
     {
         if (update()) {
@@ -76,15 +76,15 @@ public:
         : cc(channel, control), positions(_positions) {}
     
     bool update() {
-        auto posCtr {0U};
+        auto newValue {0U};
         for(auto &position: positions) {
             position.update();
-            if (position.read()) { break; }
-            ++posCtr;
+            if (!position.read()) { break; }
+            ++newValue;
         }
 
-        if (value != posCtr){
-            value = posCtr;
+        if (value != newValue){
+            value = newValue;
             return true;
         }
         return false;
@@ -92,7 +92,7 @@ public:
 
     uint8_t read() const { return value; }
 
-    void readAndUpdate()
+    void readAndSend()
     {
         if (update()){
             const auto ccVal = read();
