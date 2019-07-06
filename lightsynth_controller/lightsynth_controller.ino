@@ -105,7 +105,7 @@ void loop() {
     //     Serial.println("1");
     // }
 
-    usbMIDI.sendControlChange(arpRate.cc.channel, arpRate.cc.control, arpRate.read());
+    usbMIDI.sendControlChange(arpRate.cc.channel, arpRate.read(), arpRate.cc.control);
     // Serial.print("Ch: ");
     // Serial.print(arpRate.cc.channel);
     // Serial.print(" Ctrl: ");
