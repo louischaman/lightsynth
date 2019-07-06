@@ -88,7 +88,7 @@ public:
             ++newValue;
         }
 
-        if ((value != newValue) && (value < n_positions)){
+        if (value != newValue){
             value = newValue;
             return true;
         }
