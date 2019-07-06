@@ -63,7 +63,8 @@ public:
 
 template<
     class MIDI_T, MIDI_T& midi,
-    uint8_t n_positions>
+    uint8_t n_positions,
+    bool invert = false>
 class MidiSwitch {
 public:
     const MidiCC cc;
@@ -79,11 +80,15 @@ public:
         auto newValue {0U};
         for(auto &position: positions) {
             position.update();
-            if (!position.read()) { break; }
+
+            const auto rawVal = position.read();
+            const auto invertVal = invert ? !rawVal : rawVal;
+            if (invertVal) { break; }
+
             ++newValue;
         }
 
-        if (value != newValue){
+        if ((value != newValue) && (value < n_positions)){
             value = newValue;
             return true;
         }

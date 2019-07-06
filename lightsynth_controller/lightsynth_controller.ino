@@ -39,7 +39,7 @@ const std::array<Bounce, selectorSwitchPositions> selectorSwitch {
     Bounce(6, bounceTime),
     Bounce(7, bounceTime),
 };
-MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions> selector(channel, 0, selectorSwitch);
+MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions, true> selector(channel, 0, selectorSwitch);
 
 // Auto Play button
 MidiButton<decltype(usbMIDI), usbMIDI> autoPlay(channel, 1, 8, bounceTime);
@@ -56,7 +56,7 @@ const std::array<Bounce, sustainAmountPositions> sustainAmount {
     Bounce(11, bounceTime),
     Bounce(12, bounceTime),
 };
-MidiSwitch<decltype(usbMIDI), usbMIDI, sustainAmountPositions> sustain(channel, 4, sustainAmount);
+MidiSwitch<decltype(usbMIDI), usbMIDI, sustainAmountPositions, true> sustain(channel, 4, sustainAmount);
 
 // FX on/off
 MidiButton<decltype(usbMIDI), usbMIDI> fxOnOff(channel, 5, 14, bounceTime);
