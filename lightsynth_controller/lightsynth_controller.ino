@@ -44,11 +44,23 @@ MidiSwitch<decltype(usbMIDI), usbMIDI, selectorSwitchPositions, true> selector(c
 // Auto Play button
 MidiButton<decltype(usbMIDI), usbMIDI> autoPlay(channel, 1, 8, bounceTime);
 
+
 // Arp on/off
 MidiButton<decltype(usbMIDI), usbMIDI> arpOnOff(channel, 2, 9, bounceTime);
 
+// Arp rate pot
+MidiPot<decltype(usbMIDI), usbMIDI> arpRate(channel, 3, 9);
+
 // Scale on/off
-MidiButton<decltype(usbMIDI), usbMIDI> scaleOnOff(channel, 3, 10, bounceTime);
+MidiButton<decltype(usbMIDI), usbMIDI> scaleOnOff(channel, 4, 10, bounceTime);
+
+
+
+// Onset pot
+MidiPot<decltype(usbMIDI), usbMIDI> onsetAmount(channel, 5, 7);
+
+// Length pot
+MidiPot<decltype(usbMIDI), usbMIDI> lengthAmount(channel, 6, 8);
 
 // Sustain on/half/off
 constexpr auto sustainAmountPositions {2};
@@ -56,21 +68,11 @@ const std::array<Bounce, sustainAmountPositions> sustainAmount {
     Bounce(11, bounceTime),
     Bounce(12, bounceTime),
 };
-MidiSwitch<decltype(usbMIDI), usbMIDI, sustainAmountPositions, true> sustain(channel, 4, sustainAmount);
+MidiSwitch<decltype(usbMIDI), usbMIDI, sustainAmountPositions, true> sustain(channel, 7, sustainAmount);
+
 
 // FX on/off
-MidiButton<decltype(usbMIDI), usbMIDI> fxOnOff(channel, 5, 14, bounceTime);
-
-
-
-// Arp rate pot
-MidiPot<decltype(usbMIDI), usbMIDI> arpRate(channel, 3, 9);
-
-// Onset pot
-MidiPot<decltype(usbMIDI), usbMIDI> onsetAmount(channel, 6, 8);
-
-// Length pot
-MidiPot<decltype(usbMIDI), usbMIDI> lengthAmount(channel, 7, 7);
+MidiButton<decltype(usbMIDI), usbMIDI> fxOnOff(channel, 8, 14, bounceTime);
 
 // Reverb Dry/Wet pot
 MidiPot<decltype(usbMIDI), usbMIDI> fxReverbDryWet(channel, 9, 6);
@@ -125,5 +127,4 @@ void loop() {
     // delay(200);
     // usbMIDI.sendNoteOff(note, velocity, channel);
     while (usbMIDI.read()) {}
-    delay(50);
 }
