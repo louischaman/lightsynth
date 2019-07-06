@@ -66,19 +66,19 @@ MidiButton fxOnOff(channel, 5, 15, bounceTime);
 
 
 // Arp rate pot
-MidiPot<decltype(usbMIDI), usbMIDI> arpRate(channel, 6, 9);
+MidiPot<decltype(usbMIDI), usbMIDI> arpRate(channel, 3, 9);
 
 // Onset pot
-MidiPot<decltype(usbMIDI), usbMIDI> onsetAmount(channel, 8, 11);
+MidiPot<decltype(usbMIDI), usbMIDI> onsetAmount(channel, 6, 8);
 
 // Length pot
-MidiPot<decltype(usbMIDI), usbMIDI> lengthAmount(channel, 7, 12);
+MidiPot<decltype(usbMIDI), usbMIDI> lengthAmount(channel, 7, 7);
 
 // Reverb Dry/Wet pot
-MidiPot<decltype(usbMIDI), usbMIDI> fxReverbDryWet(channel, 6, 13);
+MidiPot<decltype(usbMIDI), usbMIDI> fxReverbDryWet(channel, 9, 6);
 
 // Echo Dry/Wet pot
-MidiPot<decltype(usbMIDI), usbMIDI> fxEchoDryWet(channel, 5, 14);
+MidiPot<decltype(usbMIDI), usbMIDI> fxEchoDryWet(channel, 10, 5);
 
 // FX Fade pot
 MidiPot<decltype(usbMIDI), usbMIDI> fxFade(channel, 11, 4);
