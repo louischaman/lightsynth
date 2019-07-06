@@ -13,8 +13,8 @@ import random
 
 from pprint import pprint
 
-max_len = 6.9
-env_scaling_pair = (0.5,2.3)
+max_length_decay = 9
+decay_exp_scaling_pair = (0.5,3)
 n_lights = 20
 
 note_old = []
@@ -75,8 +75,9 @@ instrument = inst.LightInstrument(
     cc_controls = cc_controls,
     envelope_params = envelope_params,
     mode = "cycle",
-    env_scaling_max_len = max_len,
-    env_scaling_exp_pair = env_scaling_pair )
+    max_length_attack = 5,  attack_exp_scaling_pair = 1.38, 
+    max_length_release = max_length_decay,  decay_exp_scaling_pair = decay_exp_scaling_pair, 
+    max_length_decay = max_length_decay,  release_exp_scaling_pair = decay_exp_scaling_pair )
 
 instrument_beats = inst.LightInstrument( 
     #note_list=[48,37],#,38,39,44,45,46], 
@@ -85,9 +86,7 @@ instrument_beats = inst.LightInstrument(
     light_list= list(lights.keys()), 
     cc_controls = cc_controls,
     envelope_params = envelope_params,
-    mode = "cycle",
-    env_scaling_max_len = max_len,
-    env_scaling_exp_pair = env_scaling_pair )
+    mode = "cycle" )
 
 for i, light in instrument.light_envs.items():
     light.env.lfo_rate = random.uniform(1, 4)
