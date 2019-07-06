@@ -46,8 +46,9 @@ class LightInstrument():
         mode="cycle", 
         cc_controls = {}, 
         note_channel = list(range(16)),
-        env_scaling_max_len = 5,
-        env_scaling_exp_pair = (0.5,1.5)
+        max_length_attack = 5, exp_rate_attack = 5, attack_exp_scaling_pair = None, 
+        max_length_release = 5, exp_rate_decay = 5, decay_exp_scaling_pair = None, 
+        max_length_decay = 5, exp_rate_release = 5, release_exp_scaling_pair = None
     ):
         """
         cc_controls are in the form {cc_index: param}
@@ -72,10 +73,11 @@ class LightInstrument():
             }
 
         env = lf.MidiLightAction(
-            action_data = envelope_params, 
-            max_length=env_scaling_max_len, 
-            length_exp_scaling_pair = env_scaling_exp_pair
-            ) 
+            envelope_params,
+            max_length_attack , exp_rate_attack, attack_exp_scaling_pair , 
+            max_length_release , exp_rate_decay , decay_exp_scaling_pair, 
+            max_length_decay, exp_rate_release, release_exp_scaling_pair
+        ) 
             
         for light in self.light_list:
             self.light_envs[light] = deepcopy(env)
@@ -122,7 +124,9 @@ class LightInstrument():
         self.value = hsv[2]
 
     def set_ADSR(self, parameter, value):
-        pass
+        print(parameter, value)
+        for light, env in self.light_envs.items():
+            env.set_attribute_01(parameter, value)
 
     def in_note_channel(self, midi_channel):
         # checks whether midi_channel from note is accepted by instruments channesl
@@ -155,9 +159,7 @@ class LightInstrument():
             
             # if attribute is one of the env_params 
             if param in lf.param_list:
-                print(param, value)
-                for light, env in self.light_envs.items():
-                    env.set_attribute_01(param, value)
+                self.set_ADSR(param,value)
             
             if param == 'hue':
                 print(param, value)

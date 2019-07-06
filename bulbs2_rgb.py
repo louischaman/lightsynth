@@ -13,9 +13,10 @@ import random
 
 from pprint import pprint
 
-max_len = 5
-env_scaling_pair = (0.5,1.7)
-n_lights = 18
+
+max_length_decay = 8
+decay_exp_scaling_pair = (0.5,2.8)
+n_lights = 20
 n_rgb_lights = 3
 
 #get dmx devices from user input
@@ -75,22 +76,14 @@ instrument = inst.LightInstrument(
     cc_controls = cc_controls,
     envelope_params = envelope_params,
     mode = "cycle",
-    env_scaling_max_len = max_len,
-    env_scaling_exp_pair = env_scaling_pair )
+    max_length_attack = 5,  attack_exp_scaling_pair = (0.5, 1.38), 
+    max_length_release = max_length_decay,  decay_exp_scaling_pair = decay_exp_scaling_pair, 
+    max_length_decay = max_length_decay,  release_exp_scaling_pair = decay_exp_scaling_pair )
 
 
 cc_controls = {
-    300: "lfo_rate",
-    200: "lfo_level",
-    6: "saturation",
-    7: "hue",
-    8: "level",
-    400: "mode",
-    
-    1: "attack",
-    2: "decay",
-    5: "sustain",
-    4: "release"}
+    2: "hue"
+    }
 
 envelope_params = {
     'type':'envelope', 
@@ -103,16 +96,24 @@ envelope_params = {
     'lfo_rate':1,
     'env_mode':"exponential"
 }
-instrument_beats = inst.LightInstrument( 
+instrument_kick = inst.LightInstrument( 
     #note_list=[48,37],#,38,39,44,45,46], 
-    # note_list= list(lights.keys()),
-    note_channel = 2,
+    note_list= [36],
+    note_channel = 3,
     light_list= list(lights_rgb.keys()), 
     cc_controls = cc_controls,
     envelope_params = envelope_params,
-    mode = "cycle",
-    env_scaling_max_len = max_len,
-    env_scaling_exp_pair = env_scaling_pair )
+    mode = "cycle")
+
+instrument_snare = inst.LightInstrument( 
+    #note_list=[48,37],#,38,39,44,45,46], 
+    # note_list= list(lights.keys()),
+    note_list= [38],
+    note_channel = 3,
+    light_list= list(lights_rgb.keys()), 
+    cc_controls = cc_controls,
+    envelope_params = envelope_params,
+    mode = "cycle")
 
 for i, light in instrument.light_envs.items():
     light.env.lfo_rate = random.uniform(1, 4)
@@ -120,11 +121,11 @@ for i, light in instrument.light_envs.items():
 
 modes_ind = 1
 
-instrument_rack = [instrument, instrument_beats]
+instrument_rack = [instrument, instrument_kick, instrument_snare]
 
 osc_val = 0.5
 
-easter_egg = True
+easter_egg = False
 
 while 1:
 
@@ -144,11 +145,37 @@ while 1:
                     else:
                         easter_egg = False
 
+            # if the easter egg is on change channel of cc to 3
+            # this will make it go to the second instrument
+            if easter_egg:
+                if msg.type == 'control_change':
+                    msg.channel = 3
+                    instrument_rack[1].midi_action(msg)
+                    msg.value = (msg.value + 64) % 128
+                    instrument_rack[2].midi_action(msg)
+
+
             for inst in instrument_rack:
                 inst.midi_action(msg)
 
+            if msg.type == 'note_on':
+                if msg.note == 121:
+                    easter_egg = True
+                    print("------- Easter egg on ---------")
+                    instrument.set_ADSR('attack', 0.00)
+                    instrument.set_ADSR('decay', 0.05)
+                    instrument.set_ADSR('release', 0.05)
+                    instrument.set_ADSR('sustain', 1)
+                
+                if msg.note == 124:
+                    easter_egg = False
+                    print("------- Easter egg off ---------")
+
+
     light_vals = instrument_rack[0].get_light_output()
-    light_vals_rgb = instrument_rack[1].get_light_output()
+    light_vals_rgb_kick = instrument_rack[1].get_light_output()
+    light_vals_rgb_snare = instrument_rack[2].get_light_output()
+
     
     for light_key, light in lights.items():
         val = light_vals[light_key] # [ light_vals2[light_key][i] + light_vals[light_key][i] for i in range(3)] 
@@ -157,9 +184,6 @@ while 1:
         light['func'](dmx_port, light['root_dmx'], val)
 
    
-    for light_key, light in lights_rgb.items():
-        val = light_vals_rgb[light_key] 
-        light['func'](dmx_port, light['root_dmx'], val)
 
     if not easter_egg:
         time_val = time.time()
@@ -167,11 +191,15 @@ while 1:
         sin_rot_osc = (1- osc_val ) + osc_val * math.sin(time_val+ math.pi *2 / 3)
         sin_rot_osc2 = (1- osc_val ) + osc_val * math.sin(time_val+ math.pi *4 / 3)
         set_big_light(dmx_port, n_lights + 1, ( sin_osc * 1, sin_rot_osc * 1, sin_osc * 1))
-        set_big_light(dmx_port, n_lights + 4, ( sin_rot_osc * 1, sin_rot_osc * 1, sin_rot_osc * 0))
-        set_big_light(dmx_port, n_lights + 7, ( sin_rot_osc2 * 1, sin_rot_osc2 * 0,sin_rot_osc2 * 1))
+        # set_big_light(dmx_port, n_lights + 4, ( sin_rot_osc * 1, sin_rot_osc * 1, sin_rot_osc * 0))
+        # set_big_light(dmx_port, n_lights + 7, ( sin_rot_osc2 * 1, sin_rot_osc2 * 0,sin_rot_osc2 * 1))
     else:
-        time_val = time.time()
-        # instrument_beats.set_hue(math.sin(time_val)*0.5 + 0.5)
+        for light_key, light in lights_rgb.items():
+            val_kick = light_vals_rgb_kick[light_key] 
+            val_snare = light_vals_rgb_snare[light_key] 
+            val = [x + y for x, y in zip(val_kick, val_snare)]
+            light['func'](dmx_port, light['root_dmx'], val)
+        # instrument_kick.set_hue(math.sin(time_val)*0.5 + 0.5)
 
     if isinstance(dmx_port, DMXConnection):
         dmx_port.render()

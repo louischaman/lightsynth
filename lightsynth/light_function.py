@@ -22,16 +22,37 @@ class MidiLightAction:
         set_dmx
     '''
 
-    def __init__(self, action_data, max_length = 5, exp_rate = 5, length_exp_scaling_pair = None):
+    def __init__(self, action_data, 
+        max_length_attack = 5, exp_rate_attack = 5, attack_exp_scaling_pair = None, 
+        max_length_release = 5, exp_rate_decay = 5, decay_exp_scaling_pair = None, 
+        max_length_decay = 5, exp_rate_release = 5, release_exp_scaling_pair = None):
 
         self.action_data = action_data
         self.action_type = action_data['type']
-        self.max_length = max_length
 
-        if length_exp_scaling_pair:
-            self.set_exp( *length_exp_scaling_pair )
+        self.max_length_attack = max_length_attack
+        self.max_length_release = max_length_release
+        self.max_length_decay = max_length_decay
+
+        #TODO refacter this with a dict {'attack': etc}
+        if attack_exp_scaling_pair:
+            print(attack_exp_scaling_pair)
+            self.set_exp( attack_exp_scaling_pair[0], attack_exp_scaling_pair[1], max_length_attack, 'exp_rate_attack' )
         else:
-            self.exp_rate = exp_rate
+            self.exp_rate_attack = exp_rate_attack
+
+        if decay_exp_scaling_pair:
+            print(decay_exp_scaling_pair)
+            self.set_exp( decay_exp_scaling_pair[0], decay_exp_scaling_pair[1], max_length_decay, 'exp_rate_decay' )
+        else:
+            self.exp_rate_decay = exp_rate_decay
+
+        if release_exp_scaling_pair:
+            print(release_exp_scaling_pair)
+            self.set_exp( release_exp_scaling_pair[0], release_exp_scaling_pair[1], max_length_release, 'exp_rate_release' )
+        else:
+            self.exp_rate_release = exp_rate_release
+
 
         if self.action_type == "switching":
             self.level = action_data['level']
@@ -63,13 +84,12 @@ class MidiLightAction:
         else:
             raise(ValueError("type not recognised"))
 
-    def set_exp(self, in_val, length_val):
-        print(in_val, length_val)
-        opt_func = lambda exp_rate:self.max_length * ( math.pow(exp_rate, in_val) - 1 ) /(exp_rate - 1) - length_val
+    def set_exp(self, in_val, length_val, max_length, attribute):
+        opt_func = lambda exp_rate: self.exp_scaling( max_length, exp_rate, in_val) - length_val
         res = optimize.root(opt_func,2)
-        print(res)
-        print(self.max_length * ( math.pow(res.x[0], 1) - 1 ) /(res.x[0] - 1) )
-        self.exp_rate = res.x[0]
+        setattr(self, attribute, res.x[0])
+
+
 
     def midi_message(self, msg):
         if msg.type == "note_on":
@@ -89,6 +109,7 @@ class MidiLightAction:
         # scales from 0 to max_val exponentially so more control in low end
         return max_val * ( math.pow(exp_rate, value_0_1) - 1 ) /(exp_rate - 1)
 
+    
 
     def set_attribute_01(self, attribute, value):
         '''
@@ -97,18 +118,16 @@ class MidiLightAction:
         value = min(max(value,0),1)
     
         if attribute in ['attack']:
-            max_val = self.max_length
-            exp_rate = self.exp_rate
-            val_exp = max_val * ( math.pow(exp_rate, value) - 1 ) /(exp_rate - 1)
+            val_exp = self.exp_scaling( self.max_length_attack, self.exp_rate_attack, value)
             setattr(self.env, attribute, val_exp)
         
-        # TODO make the max for decay and release seperate
-        elif attribute in ['decay', 'release']:
-            max_val = self.max_length
-            exp_rate = self.exp_rate
-            val_exp = max_val * ( math.pow(exp_rate, value) - 1 ) /(exp_rate - 1)
-            val_exp = max(val_exp, min_dec_release) # TODO make this a variable
-            setattr(self.env, attribute, val_exp*0.4) # TODO fix 0.4 thing
+        elif attribute in ['decay']:
+            val_exp = self.exp_scaling( self.max_length_decay, self.exp_rate_decay, value)
+            setattr(self.env, attribute, val_exp)
+
+        elif attribute in ['release']:
+            val_exp = self.exp_scaling( self.max_length_release, self.exp_rate_release, value)
+            setattr(self.env, attribute, val_exp)
 
         elif attribute in ['sustain']:
             setattr(self.env, attribute, value)
@@ -116,7 +135,6 @@ class MidiLightAction:
             setattr(self, attribute, value)
         elif attribute in ['level']:
             value = self.exp_scaling(1, 10, value)
-            print(value)
             setattr(self, attribute, value)
 
         elif attribute in ['lfo_level']:
