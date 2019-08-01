@@ -1,3 +1,6 @@
 *.pyc
 .vscode
 src/
+venv/
+.DS_Store
+*.class
