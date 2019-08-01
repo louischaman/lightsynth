@@ -1,3 +1,4 @@
+import argparse
 import copy
 import math
 import random
@@ -9,27 +10,29 @@ import mido
 
 import lightsynth.light_instrument as inst
 import utils.arduino_tools as at
+import utils.configuration as conf
 import utils.dmxtools as dt
 import utils.miditools as mt
+from devices import Bulb, Par3RGB
 from pysimpledmx import DMXConnection
 
-def main():
+
+def main(lights_file):
     max_length_decay = 8
     decay_exp_scaling_pair = (0.5, 2.8)
-    n_lights = 20
-    n_rgb_lights = 3
 
     # get dmx devices from user input
     print("dmx port = ")
     dmx_port = dt.user_dmx()
 
-    lights = {}
-    for i in range(n_lights):
-        lights[i] = {'root_dmx': i, 'func': dt.set_light_bulb}
+    # get lights from file
+    lights = conf.load_lights(lights_file)
+    for light in lights:
+        light.dmx_port = dmx_port
 
-    lights_rgb = {}
-    for i in range(n_rgb_lights):
-        lights_rgb[i] = {'root_dmx': i*3 + n_lights + 1, 'func': dt.set_big_light}
+    lights_bulbs = [light for light in lights if isinstance(light, Bulb)]
+    lights_rgbs = [light for light in lights if isinstance(light, Par3RGB)]
+    print(f'Found {len(lights_bulbs)} Bulbs and {len(lights_rgbs)} Par3RGBs')
 
     print("on")
 
@@ -64,14 +67,13 @@ def main():
         # note_list=[48,37],#,38,39,44,45,46],
         # note_list= list(lights.keys()),
         note_channel=0,
-        light_list=list(lights.keys()),
+        light_list=lights_bulbs,
         cc_controls=cc_controls,
         envelope_params=envelope_params,
         mode="cycle",
         max_length_attack=5,  attack_exp_scaling_pair=(0.5, 1.38),
         max_length_release=max_length_decay,  decay_exp_scaling_pair=decay_exp_scaling_pair,
         max_length_decay=max_length_decay,  release_exp_scaling_pair=decay_exp_scaling_pair)
-
 
     cc_controls = {
         2: "hue"
@@ -92,7 +94,7 @@ def main():
         # note_list=[48,37],#,38,39,44,45,46],
         note_list=[36],
         note_channel=3,
-        light_list=list(lights_rgb.keys()),
+        light_list=lights_rgbs,
         cc_controls=cc_controls,
         envelope_params=envelope_params,
         mode="cycle")
@@ -102,16 +104,13 @@ def main():
         # note_list= list(lights.keys()),
         note_list=[38],
         note_channel=3,
-        light_list=list(lights_rgb.keys()),
+        light_list=lights_rgbs,
         cc_controls=cc_controls,
         envelope_params=envelope_params,
         mode="cycle")
 
     for i, light in instrument.light_envs.items():
         light.env.lfo_rate = random.uniform(1, 4)
-
-
-    modes_ind = 1
 
     instrument_rack = [instrument, instrument_kick, instrument_snare]
 
@@ -121,7 +120,7 @@ def main():
 
     while 1:
 
-        for device, midi_port in port_dict.items():
+        for _, midi_port in port_dict.items():
 
             # if two cc messages with the same control and channel have come then only append most recent
             message_queue = mt.iter_pending_clean(midi_port)
@@ -161,16 +160,16 @@ def main():
                         easter_egg = False
                         print("------- Easter egg off ---------")
 
+        # Currently this section is rather hacky as lists, dicts, and
+        # RGB values are very confused. This will get cleaned up in time
+        # as we structure the instruments and routers nicely
         light_vals = instrument_rack[0].get_light_output()
         light_vals_rgb_kick = instrument_rack[1].get_light_output()
         light_vals_rgb_snare = instrument_rack[2].get_light_output()
 
-        for light_key, light in lights.items():
-            # [ light_vals2[light_key][i] + light_vals[light_key][i] for i in range(3)]
-            val = light_vals[light_key]
-
-            #val = [col/max_val for col in val]
-            light['func'](dmx_port, light['root_dmx'], val)
+        for light, values in zip(lights_bulbs, light_vals.values()):
+            light.values = [values[0]]
+            light.dmx_update()
 
         if not easter_egg:
             time_val = time.time()
@@ -179,20 +178,26 @@ def main():
                 math.sin(time_val + math.pi * 2 / 3)
             sin_rot_osc2 = (1 - osc_val) + osc_val * \
                 math.sin(time_val + math.pi * 4 / 3)
-            dt.set_big_light(dmx_port, n_lights + 1,
-                            (sin_osc * 1, sin_rot_osc * 1, sin_osc * 1))
-            # set_big_light(dmx_port, n_lights + 4, ( sin_rot_osc * 1, sin_rot_osc * 1, sin_rot_osc * 0))
-            # set_big_light(dmx_port, n_lights + 7, ( sin_rot_osc2 * 1, sin_rot_osc2 * 0,sin_rot_osc2 * 1))
+            for light in lights_rgbs:
+                light.values = [sin_osc * 1, sin_rot_osc * 1, sin_osc * 1]
+                light.dmx_update()
         else:
-            for light_key, light in lights_rgb.items():
+            for light_key, light in enumerate(lights_rgbs):
                 val_kick = light_vals_rgb_kick[light_key]
                 val_snare = light_vals_rgb_snare[light_key]
-                val = [x + y for x, y in zip(val_kick, val_snare)]
-                light['func'](dmx_port, light['root_dmx'], val)
+                light.values = [x + y for x, y in zip(val_kick, val_snare)]
+                light.dmx_update()
             # instrument_kick.set_hue(math.sin(time_val)*0.5 + 0.5)
 
         if isinstance(dmx_port, DMXConnection):
             dmx_port.render()
 
+
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(
+        description='Send MIDI to light instruments and route the output to lights over DMX')
+    parser.add_argument('--lightfile', type=str, help='Path to a light setup YAML file',
+                        default='vlight/demo/lights_grid.yaml')
+
+    args = parser.parse_args()
+    main(args.lightfile)
