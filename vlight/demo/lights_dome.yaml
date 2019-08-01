@@ -1,0 +1,166 @@
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 1
+  _values:
+  - 1
+  size: 40
+  tag: '1'
+  x: 250
+  y: 250
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 2
+  _values:
+  - 1
+  size: 55
+  tag: '2'
+  x: 350
+  y: 250
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 3
+  _values:
+  - 1
+  size: 55
+  tag: '3'
+  x: 280
+  y: 345
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 4
+  _values:
+  - 1
+  size: 55
+  tag: '4'
+  x: 169
+  y: 308
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 5
+  _values:
+  - 1
+  size: 55
+  tag: '5'
+  x: 169
+  y: 191
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 6
+  _values:
+  - 1
+  size: 55
+  tag: '6'
+  x: 280
+  y: 154
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 7
+  _values:
+  - 1
+  size: 30
+  tag: '7'
+  x: 440
+  y: 311
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 8
+  _values:
+  - 1
+  size: 55
+  tag: '8'
+  x: 367
+  y: 411
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 9
+  _values:
+  - 1
+  size: 30
+  tag: '9'
+  x: 250
+  y: 450
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 10
+  _values:
+  - 1
+  size: 55
+  tag: '10'
+  x: 132
+  y: 411
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 11
+  _values:
+  - 1
+  size: 30
+  tag: '11'
+  x: 59
+  y: 311
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 12
+  _values:
+  - 1
+  size: 55
+  tag: '12'
+  x: 59
+  y: 188
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 13
+  _values:
+  - 1
+  size: 30
+  tag: '13'
+  x: 132
+  y: 88
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 14
+  _values:
+  - 1
+  size: 55
+  tag: '14'
+  x: 249
+  y: 50
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 15
+  _values:
+  - 1
+  size: 30
+  tag: '15'
+  x: 367
+  y: 88
+- !!python/object:devices.bulb.Bulb
+  _dmx_port: null
+  _dmx_root: 16
+  _values:
+  - 1
+  size: 55
+  tag: '16'
+  x: 440
+  y: 188
+- !!python/object:devices.par3rgb.Par3RGB
+  _dmx_port: null
+  _dmx_root: 17
+  _values:
+  - 0.4
+  - 0
+  - 0
+  size: 50
+  tag: 17,18,19
+  x: 50
+  y: 450
+- !!python/object:devices.par3rgb.Par3RGB
+  _dmx_port: null
+  _dmx_root: 17
+  _values:
+  - 0.4
+  - 0
+  - 0
+  size: 50
+  tag: 17,18,19
+  x: 450
+  y: 450
