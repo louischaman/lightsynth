@@ -94,16 +94,21 @@ class OSCDMXSender:
         self.client = udp_client.SimpleUDPClient(args.ip, args.port)
 
     def setChannel(self, channel, level ):
-        self.client.send_message("/dmx",(channel-1,level))
+        self.client.send_message("/dmx",(channel, level))
 
-def user_dmx():
+def user_dmx( vlight = False):
     #get dmx devices from user input
-    available_ports = serial_ports()
+    if vlight:
+        return OSCDMXSender()
+
+    available_ports = serial_ports() + ['no dmx']
     if len(available_ports ) > 0:
         pprint([ (i, available_ports[i]) for i in range(len(available_ports))] )
         which_port = int(input('select port number: '))
-        
-        dmx_port = DMXConnection(available_ports[which_port])
+        if which_port == len(available_ports) - 1 : # if select no dmx
+            dmx_port = OSCDMXSender()
+        else:
+            dmx_port = DMXConnection(available_ports[which_port])
     else:
         print("no_dmx")
         dmx_port = OSCDMXSender()

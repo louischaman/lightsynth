@@ -16,6 +16,8 @@ import utils.miditools as mt
 from devices import Bulb, Par3RGB
 from pysimpledmx import DMXConnection
 
+demo_mode = True
+
 
 def main(lights_file):
     max_length_decay = 8
@@ -23,7 +25,7 @@ def main(lights_file):
 
     # get dmx devices from user input
     print("dmx port = ")
-    dmx_port = dt.user_dmx()
+    dmx_port = dt.user_dmx(demo_mode)
 
     # get lights from file
     lights = conf.load_lights(lights_file)
