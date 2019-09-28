@@ -2,9 +2,12 @@
 import _yaml as yaml
 from devices import Bulb, Par3RGB
 
+win_width = 2000
+win_height = 1500
+
 add_library('oscP5')
 
-lights_file_full_path = '/Users/ewan/git/lightsynth/vlight/demo/lights_grid.yaml'
+lights_file_full_path = "C:/dev/lightsynth_ewan/vlight/demo/lights_grid.yaml"
 
 def load_lights():
     if lights_file_full_path is None:
@@ -23,18 +26,17 @@ osc = None
 loc = None
 
 padding = 0
-min_x = min([light.x + light.size for light in lights])
-min_y = min([light.y + light.size for light in lights])
-max_x = max([light.x + light.size for light in lights])
-max_y = max([light.y + light.size for light in lights])
+min_x = min([light.x for light in lights])
+min_y = min([light.y for light in lights])
+max_x = max([light.x for light in lights])
+max_y = max([light.y for light in lights])
+max_size = max([light.size for light in lights])
 
-win_width = max_x + padding
-win_height = max_y + padding
-
-if min_x < 0 or min_y < 0:
-    print('Error: lights must lie fully in the non-negative orthand')
-
-print('Setting width = {} and height = {} to fit all the lights in the window'.format(win_width, win_height))
+x_diff = max_x - min_x
+y_diff = max_y - min_y
+x_scaling = (win_width - padding ) / (x_diff + max_size)
+y_scaling = (win_height - padding) / (x_diff + max_size)
+r_scaling = min(x_scaling, y_scaling)
 
 framerate = 25
 osc_port = 12000
@@ -53,13 +55,19 @@ def setup():
     # start oscP5 by default listening on port 12000
     osc = OscP5(this, osc_port)
     loc = NetAddress('127.0.0.1', osc_port)
-    
+
+def scale_x(x):
+    return (x - min_x + max_size) * x_scaling + padding 
+
+def scale_y(y):
+    return (y - min_y + max_size) * y_scaling + padding 
+
 def draw_light(light):
     fill(*light.values)
-    ellipse(light.x, light.y, light.size, light.size)  
+    ellipse( scale_x(light.x), scale_y(light.y), light.size * r_scaling, light.size * r_scaling)  
     fill(text_color)
     textAlign(CENTER)
-    text(light.tag, light.x, light.y+font_height/2)
+    text(light.tag, scale_x(light.x), scale_y(light.y) + font_height/2)
     
 def draw():
     background(0)
