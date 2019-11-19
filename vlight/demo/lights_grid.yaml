@@ -191,45 +191,45 @@
   y: 450
 - !!python/object:devices.par3rgb.Par3RGB
   _dmx_port: null
-  _dmx_root: 21
+  _dmx_root: 24
   _values:
   - 0.4
   - 0
   - 0
   size: 50
-  tag: 21,22,23
+  tag: 24,25,26
   x: 150
   y: 450
 - !!python/object:devices.par3rgb.Par3RGB
   _dmx_port: null
-  _dmx_root: 21
+  _dmx_root: 27
   _values:
   - 0.4
   - 0
   - 0
   size: 50
-  tag: 21,22,23
+  tag: 27,28,29
   x: 250
   y: 450
 - !!python/object:devices.par3rgb.Par3RGB
   _dmx_port: null
-  _dmx_root: 21
+  _dmx_root: 30
   _values:
   - 0.4
   - 0
   - 0
   size: 50
-  tag: 21,22,23
+  tag: 30,31,32
   x: 350
   y: 450
 - !!python/object:devices.par3rgb.Par3RGB
   _dmx_port: null
-  _dmx_root: 21
+  _dmx_root: 33
   _values:
   - 0.4
   - 0
   - 0
   size: 50
-  tag: 21,22,23
+  tag: 33,34,35
   x: 450
   y: 450

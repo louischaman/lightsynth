@@ -1,6 +1,6 @@
 import mido
 from pprint import pprint
-from collections import OrderedDict
+from collections import OrderedDict, deque
 
 
 def same_message(note_a, note_b):
@@ -119,21 +119,61 @@ def iter_pending_clean(midi_port, clean_velocity = True):
     message_queue = message_queue.values()
     return message_queue
 
-class note_store:
+class simpleMidiDevice:    
+    def on_msg(self, msg):
+        if msg.type == "note_on" :
+            # if velocity is 0 that is note off in some places
+            if msg.velocity == 0:
+                self.note_off_action(msg.note)
+            else:
+                self.note_on_action(msg.note, msg.velocity)
+        
+        elif msg.type == "note_off":
+            self.note_off_action(msg.note)
+
+        elif msg.type == "control_change":
+            self.cc_action(msg.control, msg.value)
+
+    def note_on_action(self, note, velocity):
+        pass
+
+    def note_off_action(self, note):
+        pass
+
+    def cc_action(self, control, value):
+        pass
+
+class noteStore(simpleMidiDevice):
     def __init__(self):
+        super().__init__()
         self.notes_on = [False] * 128
         self.last_note = [None] * 128
     
-    def on_msg(self, msg):
-        if msg.type == "note_on":
-            self.notes_on[msg.note] = True
-            self.last_note[msg.note] = msg
-        elif msg.type == "note_off":
-            self.notes_on[msg.note] = False
-            self.last_note[msg.note] = msg
+    def note_on_action(self, note, velocity):
+        self.notes_on[note] = True
+        self.last_note[note] = note
+
+    def note_off_action(self, note): 
+            self.notes_on[note] = False
+            self.last_note[note] = note
     
     def any_notes_on(self):
         return any(self.notes_on)
     
     def which_notes_on(self):
         return [note for note, note_val in enumerate(self.notes_on) if note_val]
+
+    
+class noteBuffer(simpleMidiDevice):
+    def __init__(self, length):
+        super().__init__()
+        self.note_buffer = deque(maxlen= length)
+    
+    def is_equal(self, seq):
+        return list(self.note_buffer) == seq
+
+    def get_last(self, n = 1):
+        return list(self.note_buffer)[-n:]    
+        
+    def note_on_action(self, note, velocity):
+        self.note_buffer.append(note)

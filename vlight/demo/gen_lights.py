@@ -29,16 +29,20 @@ def gen_gs_grid(rows=4, cols=5, size=50,
 def gen_rgb_grid(rows=1, cols=3, size=50,
                  x_start=50, x_space=100,
                  y_start=50, y_space=100,
-                 dmx_root=1, r=0.4, g=0, b=0):
+                 dmx_start=1, r=0.4, g=0, b=0):
     """
     Returns a list of rgb lights with x and y positions as layed out in a grid
     with given number of rows and columns. The same dmx root is assigned to
     each light the lights are initially assigned given rgb values
     """
-    tag = f'{dmx_root},{dmx_root+1},{dmx_root+2}'
-    rgb_lights = [Par3RGB(None, dmx_root, [r, g, b], x, y, size, tag)
+    tag = f'{dmx_start},{dmx_start+1},{dmx_start+2}'
+    rgb_lights = [Par3RGB(None, dmx_start, [r, g, b], x, y, size, tag)
                   for y in range(y_start, y_start + rows*y_space, y_space)
                   for x in range(x_start, x_start + cols*x_space, x_space)]
+    for i, light in enumerate(rgb_lights):
+        dmx_root = i*3 + dmx_start
+        light.dmx_root = dmx_root
+        light.tag = f'{dmx_root},{dmx_root+1},{dmx_root+2}'
     return rgb_lights
 
 
@@ -52,7 +56,7 @@ def lights_grid():
     rgb_lights = gen_rgb_grid(rows=1, cols=5, size=50,
                               x_start=50, x_space=100,
                               y_start=450, y_space=100,
-                              dmx_root=rgb_dmx_start, r=0.4, g=0, b=0)
+                              dmx_start=rgb_dmx_start, r=0.4, g=0, b=0)
     return gs_lights + rgb_lights
 
 
