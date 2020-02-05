@@ -2,7 +2,7 @@ from . import adsr
 from copy import deepcopy
 import colorsys
 import time
-from .light_effects import LightEffects
+from .light_effects import delay_single
 from .light_switch import LightSwitch
 import utils.miditools as mt
 import utils.maths as maths
@@ -94,7 +94,7 @@ class LightInstrumentGS(mt.simpleMidiDevice):
         self.mode = mode
         if mode == 'follow':
             note_diff_fn = lambda note_diff:min(abs(note_diff),1) * maths.sign(note_diff)
-            self.note_diff_fn = mode_params.get('note_diff_fn',note_diff_fn)
+            self.note_diff_fn = mode_params.get('note_diff_fn', note_diff_fn)
 
     def set_param(self, parameter, value):
         print(parameter, value)
@@ -131,8 +131,9 @@ class LightInstrumentGS(mt.simpleMidiDevice):
 
 
     def note_off_action(self, note):
-        which_light = self.note_light[note]
-        self.env_array.note_off(which_light)
+        if note in self.note_light:
+            which_light = self.note_light[note]
+            self.env_array.note_off(which_light)
         
     def get_light_output(self):
         return self.env_array.get_values()

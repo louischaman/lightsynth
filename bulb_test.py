@@ -9,7 +9,9 @@ from pprint import pprint
 import mido
 
 from lightsynth import router as rt
+
 from lightsynth import light_instrument as li
+from lightsynth import controllers as ctls
 
 import utils.configuration as conf
 import utils.dmxtools as dt
@@ -17,8 +19,12 @@ import utils.miditools as mt
 from devices import Bulb, Par3RGB
 from pysimpledmx import DMXConnection
 from utils.maths import sign
+from utils.message import msg_generic as gmsg
+
+import collections
 
 demo_mode = True
+unlock_sequence = [66, 68, 66, 64, 66]
 
 
 def main(lights_file):
@@ -39,6 +45,7 @@ def main(lights_file):
 
     # get midi devices from user input
     port_dict = mt.user_midi(0)
+    port_dict_out = mt.user_midi_output(1)
 
     envelope_params = {
         'attack': 0.1,
@@ -55,63 +62,120 @@ def main(lights_file):
     instrument2 = li.LightInstrumentGS(
         n_lights=len(lights_rgbs),
         envelope_params=envelope_params,
-        mode="follow")
+        mode="one_to_one")
+    
+    activate_msg = gmsg(type = 'swith_out')
+    toggle_out = gmsg(type = 'toggle_device')
+
+    print(activate_msg)
+    def switch_output_channel(midi_out_dev, msg):
+        midi_out_dev.switch_channel( (midi_out_dev.set_channel + 1) % 2)
+
+    def toggle_out_action(midi_out_dev, msg):
+        midi_out_dev.toggle_out()
+
+    generated_msgs = collections.deque()
+    activate_sequence = [
+        (0,toggle_out),
+    ] + [
+        (i/64, mido.Message('control_change', control = 7, value = int(i*2.25) % 128))
+        for i in range(128)
+    ] + [
+        (1-0.001,mido.Message('note_off', channel = 0, note = 45 ) ),
+        (1,toggle_out),
+        (1, activate_msg),
+        (1,mido.Message('note_on',channel = 12,note = 82)),
+        (1,mido.Message('note_on',channel = 12,note = 70)),
+        (1.001,mido.Message('note_off',channel = 12,note = 82)),
+        (1.001,mido.Message('note_off',channel = 12,note = 70)),
+    ]
+
+    unlocker = ctls.noteUnlocker(
+        msg_queue=generated_msgs, 
+        seq=unlock_sequence, 
+        activate_msgs_sequence=activate_sequence,
+        channel=2
+    )
+    out_dev = list(port_dict_out.values())[0]
+    midi_output = mt.midiOutputDevice(out_dev, set_channel=1)
 
     note_diff_fn = lambda note_diff: int( min(abs(note_diff),2) * sign(note_diff) )
     instrument.set_mode("follow", {'note_diff_fn':note_diff_fn})
 
     effectRGB = li.EffectColourise()
 
-    cc_mapping = {
-        1: {'param':"attack" , 'scaling_fn': 'def_exp'},
-        2: {'param':"decay" , 'scaling_fn': 'def_exp'},
-        4: {'param':"sustain" , 'scaling_fn': 'def_exp'},
-        5: {'param':"release" , 'scaling_fn': 'def_exp'},
-    }
-
-    cc_colour_mapping = {
-        7: "hue",
-        8: "saturation",
-    }
-    example_mapping = [
-        {
-            'device': instrument,
-            'type': 'midi',
-            'cc': {
-                'cc_mapping': cc_mapping
-            }
-        },
-        {
-            'device': instrument2,
-            'type': 'midi',
-            'note':{
-                'note_range': list(range(70,80))
-            },
-            'cc': {
-                'cc_mapping': cc_mapping
-            }
-        },
-        {
-            'device': effectRGB,
-            'type': 'effect',
-            'cc': {
-                'cc_mapping': cc_colour_mapping
-            }
-        }     
+    switch_channel_action = rt.action_mapping(
+        action = switch_output_channel, 
+        filter_params = {'type':'swith_out'}
+    )
+    toggle_device_action = rt.action_mapping(
+        action = lambda x,y: x.toggle_device(),
+        filter_params={'type': 'toggle_device'}
+    )
+    cc_map = [
+        rt.cc_action(control=1, param="attack" , scaling_fn='def_exp'),
+        rt.cc_action(control=2, param="decay" , scaling_fn='def_exp'),
+        rt.cc_action(control=4, param="sustain" , scaling_fn='def_exp'),
+        rt.cc_action(control=5, param="release" , scaling_fn='def_exp'),
     ]
 
-    mr = rt.midiRouterLI(mapping = example_mapping)
-    import code; code.interact(local=dict(globals(), **locals()))
+    cc_colour_mapping = [
+        rt.cc_action(control=7, param="hue" ),
+        rt.cc_action(control=8, param="saturation" ),
+    ]
+    
+    example_mapping = [
+        rt.deviceMap(
+            device = unlocker,
+            action_mappings = [
+                rt.pass_notes_action({'channel':0}),
+                toggle_device_action,
+            ]
+        ),
+        rt.deviceMap(
+            device = instrument,
+            action_mappings = cc_map + [rt.pass_notes_action()],
+            filter_params = {'channel':0},
+            ),
+        rt.deviceMap(
+            device = instrument2,
+            action_mappings = cc_map + [rt.pass_notes_action()],
+            filter_params = {'channel':2},
+        ),
+        rt.deviceMap(
+            device = midi_output,
+            action_mappings = [
+                rt.pass_all_action({'channel':0}),
+                switch_channel_action,
+                toggle_device_action
+            ]
+        ),
+        rt.deviceMap(
+            device = mt.midiOutputDevice(out_dev),
+            action_mappings = [
+                rt.pass_all_action({'channel':12})
+            ]
+        ),
+        rt.deviceMap(
+            device = effectRGB,
+            action_mappings = cc_colour_mapping
+        ),
+    ]
+
+    mr = rt.midiRouterLI(device_mapping = example_mapping)
 
     while 1:
-
         for _, midi_port in port_dict.items():
 
             # if two cc messages with the same control and channel have come then only append most recent
-            message_queue = mt.iter_pending_clean(midi_port)
+            input_msg_list = list(midi_port.iter_pending())
+            generated_msgs_list = [generated_msgs.popleft() for _i in range(len(generated_msgs))]
+
+            message_queue = list(mt.iter_pending_clean(input_msg_list + generated_msgs_list))
 
             for msg in message_queue:
                 print(msg)
+                # msg = rt.msg_constructor(test = 'a')
                 mr.on_msg(msg)
 
         light_vals = instrument.get_light_output()
@@ -124,6 +188,7 @@ def main(lights_file):
         for light, rgb_val in zip(lights_rgbs, rgb_vals):
             light.values = rgb_val
             light.dmx_update()
+
         if isinstance(dmx_port, DMXConnection):
             dmx_port.render()
 

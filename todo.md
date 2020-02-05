@@ -1,8 +1,5 @@
 # TO Do
-
-- change instrument output type to use numpy
-- create instrument rack 
-- add lfo and other waveforms for instrument
-- create strobe module
-- latching on and off
+- make generated_msgs use queue.Queue
+- add class to generate cc cycle using threading
+- on unlock switch instruments
 
