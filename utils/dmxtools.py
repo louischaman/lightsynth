@@ -96,10 +96,14 @@ class OSCDMXSender:
     def setChannel(self, channel, level ):
         self.client.send_message("/dmx",(channel, level))
 
-def user_dmx( vlight = False):
+def user_dmx( vlight = False, port_str=None):
     #get dmx devices from user input
-    if vlight:
+    print(vlight)
+    if vlight is True:
         return OSCDMXSender()
+
+    if not (port_str is None) and isinstance(port_str, str):
+        return DMXConnection(port_str)
 
     available_ports = serial_ports() + ['no dmx']
     if len(available_ports ) > 0:

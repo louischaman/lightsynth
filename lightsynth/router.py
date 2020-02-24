@@ -47,11 +47,13 @@ def make_list_if_not(allowed):
     return [allowed] if not isinstance(allowed, list) else allowed
 
 # eg cc mapping {'param':"attack" , 'scaling_fn': 'def_exp'}
-def cc_action(control, param, scaling_fn=None, scaling_params=None):
+def cc_action(control, param, scaling_fn=None, scaling_params=None, channel=None):
     if scaling_fn is None:
         scaling_fn = DEFAULT_LIN_SCALING_FN
     if scaling_params is None:
         scaling_params = {}
+    if channel is None:
+        channel = list(range(16))
 
     if isinstance(scaling_fn, str):
             # if the function parameter is a string then set fn from base_scaling_fns
@@ -65,7 +67,8 @@ def cc_action(control, param, scaling_fn=None, scaling_params=None):
 
     filter_params = {
         'type':'control_change',
-        'control': control
+        'control': control,
+        'channel': channel,
     }
     return action_mapping(filter_params = filter_params, action=cc_change, filter_type=mido.Message)
 

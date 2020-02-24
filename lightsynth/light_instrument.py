@@ -57,7 +57,8 @@ class LightInstrumentGS(mt.simpleMidiDevice):
         envelope_params=None, 
         mode="cycle",
         mode_params=None,
-        cc_mapping = None
+        cc_mapping = None,
+        level=1
     ):
         """
         cc_mapping are in the form {cc_index: param}
@@ -86,9 +87,11 @@ class LightInstrumentGS(mt.simpleMidiDevice):
         # for turning off the right light
         self.note_light = {}
 
+        # last light that played for cycle or follow
         self.last_light = -1
 
         self.note_buffer = mt.noteBuffer(2)
+        self.level=level
     
     def set_mode(self, mode, mode_params):
         self.mode = mode
@@ -117,6 +120,11 @@ class LightInstrumentGS(mt.simpleMidiDevice):
             return self.last_light
 
     def note_on_action(self, note, velocity):
+        if self.mode == 'all':
+            for i in range(self.n_lights):
+                self.env_array.note_on(i)
+            return
+
         self.note_buffer.note_on_action(note, velocity)
         which_light = self.note_on_to_light_mapping(note)
 
@@ -131,9 +139,16 @@ class LightInstrumentGS(mt.simpleMidiDevice):
 
 
     def note_off_action(self, note):
+        if self.mode == 'all':
+            for i in range(self.n_lights):
+                self.env_array.note_off(i)
+            return 
+
         if note in self.note_light:
             which_light = self.note_light[note]
             self.env_array.note_off(which_light)
+        
+        
         
     def get_light_output(self):
         return self.env_array.get_values()

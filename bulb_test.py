@@ -44,11 +44,11 @@ def main(lights_file):
     print("on")
 
     # get midi devices from user input
-    port_dict = mt.user_midi(0)
+    port_dict = mt.user_midi()
     port_dict_out = mt.user_midi_output(1)
 
     envelope_params = {
-        'attack': 0.1,
+        'attack': 0.0,
         'decay': 2,
         'sustain': 1,
         'release': 2,
@@ -128,19 +128,19 @@ def main(lights_file):
         rt.deviceMap(
             device = unlocker,
             action_mappings = [
-                rt.pass_notes_action({'channel':0}),
+                rt.pass_notes_action({'channel':9}),
                 toggle_device_action,
             ]
         ),
         rt.deviceMap(
             device = instrument,
             action_mappings = cc_map + [rt.pass_notes_action()],
-            filter_params = {'channel':0},
+            filter_params = {'channel':9},
             ),
         rt.deviceMap(
             device = instrument2,
             action_mappings = cc_map + [rt.pass_notes_action()],
-            filter_params = {'channel':2},
+            filter_params = {'channel':8},
         ),
         rt.deviceMap(
             device = midi_output,
