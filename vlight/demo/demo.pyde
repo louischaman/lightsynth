@@ -7,7 +7,7 @@ win_height = 1500
 
 add_library('oscP5')
 
-lights_file_full_path = "C:/dev/lightsynth_ewan/vlight/demo/lights_grid.yaml"
+lights_file_full_path = "C:/dev/lightsynth/vlight/demo/lights_grid.yaml"
 
 def load_lights():
     if lights_file_full_path is None:
@@ -94,7 +94,7 @@ def oscEvent(msg):
         channel = msg.get(0).intValue()
         value = msg.get(1).intValue()
 
-        print('### received osc message: set channel %3d to %3d' % (channel, value))
+        #print('### received osc message: set channel %3d to %3d' % (channel, value))
         
         for light in lights:          
             if light.dmx_root <= channel and channel < light.dmx_root + light.num_channels:

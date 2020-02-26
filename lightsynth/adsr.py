@@ -12,7 +12,7 @@ class ADSRenvelope(object):
 
     max attack is always 1
     '''
-    def __init__(self, attack, decay, sustain, release, lfo_level=0, lfo_rate=1,  mode="linear"):
+    def __init__(self, attack, decay, sustain, release, lfo_level=0, lfo_rate=1,  mode="linear", level=1):
         self.attack = attack
         self.decay = decay
         self.sustain = sustain
@@ -20,12 +20,7 @@ class ADSRenvelope(object):
         self.mode = mode
         self.note_on = False
         self.event_time = 0
-        self.lfo_level = lfo_level
-        self.lfo_rate = lfo_rate
-
-        # for lfo
-        self.note_on_time =  time.time()
-        self.extra_time = 0
+        self.level = level
 
     def on_note(self):
         '''
@@ -38,8 +33,6 @@ class ADSRenvelope(object):
         self.event_time = time.time() - time_since_event
         self.note_on = True
 
-        # for lfo
-        #self.note_on_time =  time.time()
 
     def off_note(self):
         '''
@@ -90,38 +83,24 @@ class ADSRenvelope(object):
         if self.mode == "exponential":
             return self.exp_scaling( 2, (1 - 1.0 / self.release * time_since_event) * self.off_level)
 
-    def get_level_adsr(self):
+    def get_level(self):
         '''
         gets the level of the envelope at any time
         '''
         time_since_event = time.time() - self.event_time
         phase = self.get_phase()
         if phase == "attack":
-            return self.get_attack_level(time_since_event)
+            level = self.get_attack_level(time_since_event)
         if phase == "decay":
-            return self.get_decay_level(time_since_event)
+            level = self.get_decay_level(time_since_event)
         if phase == "sustain":
-            return self.sustain
+            level = self.sustain
         if phase == "release":
-            return self.get_release_level(time_since_event)
+            level = self.get_release_level(time_since_event)
         if phase == "off":
-            return 0
+            level = 0
 
-    def set_lfo_rate(self, rate):
-        self.note_on_time  = time.time() - rate * ( (time.time() - self.note_on_time)  / self.lfo_rate )
-        #self.extra_time = sin_time
-        self.lfo_rate = max(rate, 0.00001)
-
-    def get_level(self):
-        level_pre_lfo = self.get_level_adsr()
-        if self.lfo_level == 0:
-            return level_pre_lfo
-
-        else:
-            sine_level = math.sin( (time.time() - self.note_on_time) * 2 * math.pi / self.lfo_rate) 
-            osc_level = (sine_level + 1) * 0.5 * self.lfo_level
-            
-            return level_pre_lfo * (1 - self.lfo_level + osc_level)
+        return level * self.level
 
     def debug_env(self):
         print("level %f - time %f - phase %s" % (self.get_level(), time.time() - self.event_time, self.get_phase() ) )
